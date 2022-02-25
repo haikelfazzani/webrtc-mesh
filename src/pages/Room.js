@@ -75,17 +75,16 @@ export default function Room() {
       setCallAccepted(false)
       setReceivingCall(false)
       if (currentPeer) {
-        setMedia(null)
-        currentPeer.destroy()
-        currentPeer.removeStream(media.stream)
+        currentPeer.current.destroy()
+        currentPeer.current.removeStream(media.stream)
       }
     });
 
     socket.current.on("disconnect", () => {
       if (currentPeer) {
         setMedia(null)
-        currentPeer.destroy()
-        currentPeer.removeStream(media.stream)
+        currentPeer.current.destroy()
+        currentPeer.current.removeStream(media.stream)
       }
     })
   }, []);
