@@ -5,19 +5,24 @@ import Nav from '../components/Nav'
 export default function Home() {
   return (
     <div>
-
       <Nav />
 
-      <h1>La visioconférence haute qualité, maintenant disponible pour tous</h1>
-      <p>Nous avons adapté Google Meet, notre service de visioconférence professionnel sécurisé, afin de le rendre disponible pour tous.</p>
+      <section className='grid-2 container'>
+        <div className='h-align'>
+          <h1>La visioconférence haute qualité, maintenant disponible pour tous</h1>
+          <p>Nous avons adapté Google Meet, notre service de visioconférence professionnel sécurisé, afin de le rendre disponible pour tous.</p>
 
 
-      <div>
-        <p>Autorisez Meet à utiliser votre caméra et votre micro</p>
-        <p>Meet doit pouvoir accéder à votre caméra et à votre micro pour permettre aux autres participants de vous voir et de vous entendre. Vous devrez confirmer ce choix sur chaque navigateur et ordinateur que vous utilisez.</p>
-      </div>
+          <div>
+            <p>Autorisez Meet à utiliser votre caméra et votre micro</p>
+            <p>Meet doit pouvoir accéder à votre caméra et à votre micro pour permettre aux autres participants de vous voir et de vous entendre. Vous devrez confirmer ce choix sur chaque navigateur et ordinateur que vous utilisez.</p>
+          </div>
 
-      <Link className='btn' to={{ pathname: '/room', search: 'roomID=' + window.cryptoUid(12) + '&initiator=' + true }}>Create room</Link>
+          <Link className='btn bg-blue' to={{ pathname: '/room', search: 'roomID=' + window.cryptoUid(12) + '&initiator=' + true }}>Create room</Link>
+        </div>
+
+        <img src="https://i.ibb.co/vJ2Mtdk/business-5840870-960-720.png" alt="video" />
+      </section>
     </div>
   )
 }
