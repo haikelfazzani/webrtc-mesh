@@ -71,12 +71,6 @@ a {color: var(--white);}
 
 
 /*******************************************/
-.grid-4 {
-  display: grid;
-  grid-template-columns: 50% 50%;
-  grid-gap: 10px;
-}
-
 .grid-2 {
   width: 100%;
   display: grid;
@@ -103,6 +97,8 @@ h1 {font-size: 2.5rem;}
 .bg-blue {background-color: var(--blue);}
 
 .red {color: red;}
+
+.text-center {text-align: center;}
 
 .w-100 {width: 100%;}
 .h-100 {height: 100%;}

@@ -1,20 +1,17 @@
 main {
     width: 100vw;
-    height: calc(100vh - 50px);
-    display: grid;
-    grid-template-columns: 70% 25%;
-    gap: 20px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
     justify-content: space-between;
+    align-items: center;
   }
   
 
 .media-controls {
     height: 50px;
     width: 100%;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    padding: 0 20px;
+    background-color: rgba(0, 0, 0, 0.219);
     border-top: 1px solid var(--light);
 }
 
@@ -24,3 +21,22 @@ main {
     padding: 0 15px;
     cursor: pointer;
 }
+
+.media-videos {
+    width: 100%;
+    height: calc(100% - 70px);
+    display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  justify-items: stretch;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  grid-gap: 10px;
+  padding: 20px;
+}
+
+video {height: auto;
+    width: 100%;
+    max-width: 640px;}
+
+    .chat-box {width: 250px; position: fixed; right: 0; top: 0;}

@@ -25,6 +25,7 @@ export default function Room() {
   let query = useQuery();
   const connectedUsers = useRef([]);
   const [media, setMedia] = useState({ video: false, audio: false, stream: null, controls: false });
+  const [showChat, setShowChat] = useState(false)
 
   useEffect(() => {
     socket.current = window.io.connect(proxy_server);
@@ -69,7 +70,6 @@ export default function Room() {
     socket.current.on("user-leaved-room", async ({ room, id }) => {
       const filtredUsers = connectedUsers.current.filter(u => u.id !== id && u.room === room);
       connectedUsers.current = filtredUsers;
-      console.log('user disconnected', id, connectedUsers.current);
       await new Audio('https://www.myinstants.com/media/sounds/leave_call_bfab46cf473a2e5d474c1b71ccf843a1.mp3').play()
       userVideo.current = null;
       partnerVideo.current = null;
@@ -158,8 +158,8 @@ export default function Room() {
     const constraints = { cursor: true };
     const shareStream = await navigator.mediaDevices.getDisplayMedia(constraints);
     const screenTrack = shareStream.getTracks()[0];
-    userVideo.current.srcObject = shareStream;
-    setMedia({ ...media, controls: true })
+    if(userVideo && userVideo.current) userVideo.current.srcObject = shareStream;
+    setMedia({ ...media, controls: !media.controls })
 
     if (currentPeer.current) {
       currentPeer.current.replaceTrack(
@@ -190,14 +190,16 @@ export default function Room() {
     setMedia({ ...media, audio: !media.audio })
   }
 
+  const onChat = ()=>{ setShowChat(!showChat) }
+
   return (<main>
 
-    <div className='grid-4'>
-      {media && media.stream && <video className='w-100 br7' playsInline ref={userVideo} autoPlay controls={media.controls} />}
-      {callAccepted && <video className='w-100 br7' playsInline ref={partnerVideo} autoPlay controls={media.controls}></video>}
+    <div className='w-100 media-videos'>
+      {media && media.stream && <video className='br7' playsInline ref={userVideo} autoPlay controls={media.controls} />}
+      {callAccepted && <video className='br7' playsInline ref={partnerVideo} autoPlay controls={media.controls}></video>}
     </div>
 
-    {currentUser && <div className='media-controls bg-dark d-flex justify-between align-center'>
+    {currentUser && <div className='media-controls d-flex justify-center align-center blur'>
       <div>
         <button onClick={onToggleCam} title="Toggle Video">
           <i className={media.video ? 'fa fa-video' : 'fa fa-video-slash'}></i>
@@ -206,11 +208,11 @@ export default function Room() {
           <i className={media.audio ? 'fa fa-microphone' : 'fa fa-microphone-slash'}></i>
         </button>
         <button onClick={onScreenShare}><i className='fa fa-desktop'></i></button>
+        <button onClick={onChat}><i className='fa fa-comments'></i></button>
       </div>
-      <div>{currentUser.username}</div>
     </div>}
 
-    <div className='h-100 bg-dark'>
+    {showChat && <div className='h-100 chat-box bg-dark'>
       <ul>
         {connectedUsers.current.map(u => <li key={u.id}>{u.username} ({u.id})</li>)}
       </ul>
@@ -219,7 +221,7 @@ export default function Room() {
         <input type="text" placeholder='message' required />
         <button className='btn' type='submit'>send</button>
       </form>
-    </div>
+    </div>}
 
     {!query.get('initiator') && <AlertModal status={true}>
       {!callAccepted && connectedUsers.current && connectedUsers.current.map(user => {
