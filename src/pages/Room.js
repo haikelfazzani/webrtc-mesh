@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import AlertModal from '../components/AlertModal';
 import useQuery from '../hooks/useQuery';
 import makeid from '../utils/makeid';
+import './Room.css'
 
 const proxy_server = process.env.NODE_ENV === 'production'
   ? 'https://maxiserv.azurewebsites.net'
@@ -23,7 +24,7 @@ export default function Room() {
 
   let query = useQuery();
   const connectedUsers = useRef([]);
-  const [media, setMedia] = useState({ video: false, audio: false, stream: null });
+  const [media, setMedia] = useState({ video: false, audio: false, stream: null, controls: false });
 
   useEffect(() => {
     socket.current = window.io.connect(proxy_server);
@@ -74,7 +75,7 @@ export default function Room() {
       partnerVideo.current = null;
       setCallAccepted(false)
       setReceivingCall(false)
-      if (currentPeer) {
+      if (currentPeer && currentPeer.current) {
         currentPeer.current.destroy()
         currentPeer.current.removeStream(media.stream)
       }
@@ -157,6 +158,8 @@ export default function Room() {
     const constraints = { cursor: true };
     const shareStream = await navigator.mediaDevices.getDisplayMedia(constraints);
     const screenTrack = shareStream.getTracks()[0];
+    userVideo.current.srcObject = shareStream;
+    setMedia({ ...media, controls: true })
 
     if (currentPeer.current) {
       currentPeer.current.replaceTrack(
@@ -171,36 +174,41 @@ export default function Room() {
           media.stream.getVideoTracks()[0],
           media.stream
         );
-        userVideo.current.srcObject = media.stream
+        userVideo.current.srcObject = media.stream;
+        setMedia({ ...media, controls: false })
       }
-
-      if (shareStream && userVideo) userVideo.current.srcObject = shareStream
     }
   }
 
   const onToggleCam = () => {
-    media.stream.getVideoTracks()[0].enabled = media.video
-    setMedia({ ...media, video: !media.video })
+    media.stream.getVideoTracks()[0].enabled = !media.stream.getVideoTracks()[0].enabled
+    setMedia({ ...media, video: !media.video });
   }
 
   const onToggleAudio = () => {
-    media.stream.getAudioTracks()[0].enabled = media.audio
+    media.stream.getAudioTracks()[0].enabled = !media.stream.getAudioTracks()[0].enabled
     setMedia({ ...media, audio: !media.audio })
   }
 
   return (<main>
 
     <div className='grid-4'>
-      <div> {console.log(currentUser.id, connectedUsers.current)}
-        {media && media.stream && <video playsInline muted ref={userVideo} autoPlay />}
-        {currentUser && <div>{currentUser.username}</div>}
-        <button className='btn' onClick={onToggleCam} title="Toggle Video">{media.video ? 'enable Video' : 'disbale Video'}</button>
-        <button className='btn' onClick={onToggleAudio} title="Toggle Audio">{media.audio ? 'enable Audio' : 'disbale Audio'}</button>
-        <button className='btn' onClick={onScreenShare}>Screen Share</button>
-      </div>
-
-      {callAccepted && <div><video playsInline ref={partnerVideo} autoPlay /></div>}
+      {media && media.stream && <video className='w-100 br7' playsInline ref={userVideo} autoPlay controls={media.controls} />}
+      {callAccepted && <video className='w-100 br7' playsInline ref={partnerVideo} autoPlay controls={media.controls}></video>}
     </div>
+
+    {currentUser && <div className='media-controls bg-dark d-flex justify-between align-center'>
+      <div>
+        <button onClick={onToggleCam} title="Toggle Video">
+          <i className={media.video ? 'fa fa-video' : 'fa fa-video-slash'}></i>
+        </button>
+        <button onClick={onToggleAudio} title="Toggle Audio">
+          <i className={media.audio ? 'fa fa-microphone' : 'fa fa-microphone-slash'}></i>
+        </button>
+        <button onClick={onScreenShare}><i className='fa fa-desktop'></i></button>
+      </div>
+      <div>{currentUser.username}</div>
+    </div>}
 
     <div className='h-100 bg-dark'>
       <ul>
@@ -234,6 +242,7 @@ export default function Room() {
       <button className='btn' onClick={() => { onAcceptOrCancelCall(true) }}>Accept</button>
       <button className='btn' onClick={() => { onAcceptOrCancelCall(false) }}>Cancel</button>
     </AlertModal>}
+
   </main>
   );
 }

@@ -3,6 +3,7 @@
   --black:#0e0e0e;
   --white: #fff;
   --blue:#0098f8;
+  --light:rgb(54, 54, 54);
   --box-shad: 0px 5px 18px rgb(0 0 0 / 20%);
   --light-shadow: 0 3px 1px -2px rgb(0 0 0 / 20%), 0 2px 2px 0 rgb(0 0 0 / 14%), 0 1px 5px 0 rgb(0 0 0 / 12%);
 }
@@ -25,15 +26,6 @@ body {
   font-family: 'Noto Sans', 'Courier New', Courier, monospace;
 }
 
-main {
-  width: 100vw;
-  height: 100vh;
-  display: grid;
-  grid-template-columns: 72% 25%;
-  gap: 20px;
-  justify-content: space-between;
-}
-
 .container {
   padding: 10px 50px;
 }
@@ -44,7 +36,6 @@ nav li {padding: 10px 15px; cursor: pointer;}
 .nav-brand a {font-weight: 600; color: var(--blue); font-size: 20px;}
 
 /*****************************************************/
-
 section {
   width: 100vw;
   height: calc(100vh - 70px);
@@ -78,14 +69,12 @@ a {color: var(--white);}
   line-height: 1 !important;
   letter-spacing: 0.6px; border-radius: 3px;}
 
-video {width: 100%; border-radius: 7px;}
+
 /*******************************************/
 .grid-4 {
   display: grid;
+  grid-template-columns: 50% 50%;
   grid-gap: 10px;
-  grid-template-columns: 1fr 1fr;
-  grid-auto-columns: 1fr;
-  padding: 5px;
 }
 
 .grid-2 {
@@ -99,6 +88,9 @@ video {width: 100%; border-radius: 7px;}
 .d-flex {display: flex;}
 
 .justify-between {justify-content: space-between;}
+.justify-center {justify-content: center;}
+
+.align-center {align-items: center;}
 
 .h-align {
   display: flex; flex-direction: column; justify-content: center;

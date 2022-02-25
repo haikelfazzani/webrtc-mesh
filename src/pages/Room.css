@@ -1,0 +1,26 @@
+main {
+    width: 100vw;
+    height: calc(100vh - 50px);
+    display: grid;
+    grid-template-columns: 70% 25%;
+    gap: 20px;
+    justify-content: space-between;
+  }
+  
+
+.media-controls {
+    height: 50px;
+    width: 100%;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    padding: 0 20px;
+    border-top: 1px solid var(--light);
+}
+
+.media-controls button {
+    font-size: 22px;
+    color: #fff;
+    padding: 0 15px;
+    cursor: pointer;
+}
