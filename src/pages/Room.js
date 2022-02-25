@@ -8,7 +8,6 @@ const proxy_server = process.env.NODE_ENV === 'production'
   : 'http://localhost:8000';
 
 export default function Room() {
-  const [users, setUsers] = useState([]);
 
   const [receivingCall, setReceivingCall] = useState(false);
   const [caller, setCaller] = useState("");
@@ -16,13 +15,14 @@ export default function Room() {
   const [callAccepted, setCallAccepted] = useState(false);
 
   const [currentUser, setCurrentUser] = useState({ id: '', username: makeid(5) });
-  const [currentPeer, setCurrentPeer] = useState()
+  const currentPeer = useRef(null)
 
   const userVideo = useRef();
   const partnerVideo = useRef();
   const socket = useRef();
 
   let query = useQuery();
+  const connectedUsers = useRef([]);
   const [media, setMedia] = useState({ video: false, audio: false, stream: null });
 
   useEffect(() => {
@@ -56,7 +56,7 @@ export default function Room() {
     });
 
     socket.current.on("get-Users", (users) => {
-      setUsers(users);
+      connectedUsers.current = users;
     });
 
     socket.current.on("receiving-call", (data) => {
@@ -66,7 +66,9 @@ export default function Room() {
     });
 
     socket.current.on("user-leaved-room", async ({ room, id }) => {
-      console.log('user disconnected', id, users);
+      const filtredUsers = connectedUsers.current.filter(u => u.id !== id && u.room === room);
+      connectedUsers.current = filtredUsers;
+      console.log('user disconnected', id, connectedUsers.current);
       await new Audio('https://www.myinstants.com/media/sounds/leave_call_bfab46cf473a2e5d474c1b71ccf843a1.mp3').play()
       userVideo.current = null;
       partnerVideo.current = null;
@@ -96,6 +98,8 @@ export default function Room() {
       channelName: query.get('roomID')
     });
 
+    currentPeer.current = peer
+
     peer.on("signal", async data => {
       socket.current.emit("start-call-user", { userToCall: id, signalData: data, from: currentUser.id });
       await new Audio('https://www.myinstants.com/media/sounds/google-meet-ask-to-join-sound.mp3').play()
@@ -116,8 +120,6 @@ export default function Room() {
       peer.removeStream(media.stream)
       peer.destroy()
     });
-
-    setCurrentPeer(peer);
   }
 
   function onAcceptOrCancelCall(isCallAccepted) {
@@ -131,6 +133,8 @@ export default function Room() {
       stream: media.stream,
       channelName: query.get('roomID')
     });
+
+    currentPeer.current = peer
 
     peer.on("signal", async data => {
       socket.current.emit("accept-user-call", { signal: data, to: caller });
@@ -155,22 +159,23 @@ export default function Room() {
     const shareStream = await navigator.mediaDevices.getDisplayMedia(constraints);
     const screenTrack = shareStream.getTracks()[0];
 
-    // const res = stream.getVideoTracks().find((sender) => sender.track.kind === 'video');
-    // console.log(res);
+    if (currentPeer.current) {
+      currentPeer.current.replaceTrack(
+        currentPeer.current.streams[0].getVideoTracks()[0],
+        screenTrack,
+        media.stream
+      )
 
-    console.log(currentPeer, media.stream.getTracks());
+      screenTrack.onended = function () {
+        currentPeer.current.replaceTrack(
+          currentPeer.current.streams[0].getVideoTracks()[0],
+          media.stream.getVideoTracks()[0],
+          media.stream
+        );
+        userVideo.current.srcObject = media.stream
+      }
 
-    if (currentPeer) {
-      media.stream.getTracks().forEach(track => {
-        console.log(track);
-        currentPeer.removeTrack(track, media.stream)
-      });
-
-
-      currentPeer.addTrack(screenTrack, media.stream)
-      userVideo.current.srcObject = shareStream
-      // currentPeer.removeStream(shareStream)
-      // currentPeer.addStream(stream)
+      if (shareStream && userVideo) userVideo.current.srcObject = shareStream
     }
   }
 
@@ -187,18 +192,22 @@ export default function Room() {
   return (<main>
 
     <div className='grid-4'>
-      <div> {console.log(currentUser.id, users)}
-        {media.stream && <video playsInline muted ref={userVideo} autoPlay />}
+      <div> {console.log(currentUser.id, connectedUsers.current)}
+        {media && media.stream && <video playsInline muted ref={userVideo} autoPlay />}
         {currentUser && <div>{currentUser.username}</div>}
         <button className='btn' onClick={onToggleCam} title="Toggle Video">{media.video ? 'enable Video' : 'disbale Video'}</button>
         <button className='btn' onClick={onToggleAudio} title="Toggle Audio">{media.audio ? 'enable Audio' : 'disbale Audio'}</button>
-        {/* <button onClick={onScreenShare}>Screen Share</button> */}
+        <button className='btn' onClick={onScreenShare}>Screen Share</button>
       </div>
 
       {callAccepted && <div><video playsInline ref={partnerVideo} autoPlay /></div>}
     </div>
 
     <div className='h-100 bg-dark'>
+      <ul>
+        {connectedUsers.current.map(u => <li key={u.id}>{u.username} ({u.id})</li>)}
+      </ul>
+
       <form>
         <input type="text" placeholder='message' required />
         <button className='btn' type='submit'>send</button>
@@ -206,7 +215,7 @@ export default function Room() {
     </div>
 
     {!query.get('initiator') && <AlertModal status={true}>
-      {!callAccepted && users && users.map(user => {
+      {!callAccepted && connectedUsers.current && connectedUsers.current.map(user => {
         if (user.id === currentUser.id) {
           return null;
         }
