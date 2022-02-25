@@ -9,13 +9,13 @@ export default function App() {
   return (<>
     <Router>
 
-      <ul>
+      {/* <ul>
         <Link to="/">home</Link>
-      </ul>
+      </ul> */}
 
       <Switch>
         <Route exact path="/" component={Home} />
-        <Route path="/room/:roomID/:muted/:videodisbaled" component={Room} />
+        <Route path="/room" component={Room} />
         <Redirect from="*" to="/" />
       </Switch>
 
