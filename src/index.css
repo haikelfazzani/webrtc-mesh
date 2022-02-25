@@ -36,26 +36,48 @@ main {
 
 /**********************************************************************/
 .bg-dark {background-color: var(--dark);}
+
+.red {color: red;}
+
 .w-100 {width: 100%;}
 .h-100 {height: 100%;}
-/**********************************************************************/
-video {width: 100%; border-radius: 7px;}
 
-input {padding: 1.2rem;}
+.ml-2 { margin-left: 20px; }
+.ml-3 { margin-left: 30px; }
 
-ul {font-size: 12px; display: flex; flex-direction: column;}
+.br7 {border-radius: 7px;}
 
-.pub {
-  width: 100%;
+.blur {
   background-color: rgba(31, 31, 31, 0.856);
-  color: #fff;
-  position: fixed;
-  top: 0;
-  left: 0;
-  padding: 20px;
-  border-radius: 7px;
   backdrop-filter: blur(5px);
 }
+
+/**********************************************************************/
+button,input {margin:0; background-color: transparent; padding: 0; border: 0;}
+
+.btn {       
+    display: inline-flex;
+    align-items: center;
+    border: none;
+    text-decoration: none;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;    
+    font-weight: 500;
+  text-transform: uppercase;
+  cursor: pointer;  
+}
+
+.btn, input {
+  background-color: var(--white); 
+  padding: 1.4em 1em; 
+  line-height: 1 !important;
+  letter-spacing: 0.6px; border-radius: 3px;}
+
+video {width: 100%; border-radius: 7px;}
+
+
+ul {font-size: 12px; display: flex; flex-direction: column;}
 
 .grid-4 {
   display: grid;
@@ -70,5 +92,3 @@ ul {font-size: 12px; display: flex; flex-direction: column;}
   display: grid;
   grid-template-columns: 75% 25%;
 }
-
-.red {color: red;}

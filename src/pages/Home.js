@@ -1,9 +1,13 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import Nav from '../components/Nav'
 
 export default function Home() {
   return (
     <div>
+
+      <Nav />
+
       <h1>La visioconférence haute qualité, maintenant disponible pour tous</h1>
       <p>Nous avons adapté Google Meet, notre service de visioconférence professionnel sécurisé, afin de le rendre disponible pour tous.</p>
 

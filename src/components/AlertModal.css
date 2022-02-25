@@ -1,0 +1,7 @@
+.alert-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    display: flex;
+    padding: 10px;
+}

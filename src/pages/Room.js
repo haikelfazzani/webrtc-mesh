@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import AlertModal from '../components/AlertModal';
 import useQuery from '../hooks/useQuery';
 import makeid from '../utils/makeid';
 
@@ -45,10 +46,10 @@ function Room() {
     });
 
     socket.current.on("connect", () => {
-      socket.current.emit('joined', { 
-        username: currentUser.username, 
-        roomID : query.get('roomID'), 
-        currentUser 
+      socket.current.emit('joined', {
+        username: currentUser.username,
+        roomID: query.get('roomID'),
+        currentUser
       });
     });
 
@@ -81,8 +82,9 @@ function Room() {
       channelName: query.get('roomID')
     });
 
-    peer.on("signal", data => {
-      socket.current.emit("callUser", { userToCall: id, signalData: data, from: currentUser.id })
+    peer.on("signal", async data => {
+      socket.current.emit("callUser", { userToCall: id, signalData: data, from: currentUser.id });
+      await new Audio('https://www.myinstants.com/media/sounds/google-meet-ask-to-join-sound.mp3').play()
     })
 
     peer.on("stream", stream => {
@@ -96,7 +98,8 @@ function Room() {
       peer.signal(signal);
     });
 
-    socket.current.on("disconnect", () => {
+    socket.current.on("disconnect", async () => {
+      await new Audio('https://www.myinstants.com/media/sounds/leave_call_bfab46cf473a2e5d474c1b71ccf843a1.mp3').play()
       userVideo.current = null;
       partnerVideo.current = null;
       media.stream(null);
@@ -107,8 +110,11 @@ function Room() {
     setCurrentPeer(peer);
   }
 
-  function acceptCall() {
-    setCallAccepted(true);
+  function onAcceptOrCancelCall(isCallAccepted) {
+    setCallAccepted(isCallAccepted);
+
+    if (!isCallAccepted) return;
+
     const peer = new window.SimplePeer({
       initiator: false,
       trickle: false,
@@ -116,8 +122,9 @@ function Room() {
       channelName: query.get('roomID')
     });
 
-    peer.on("signal", data => {
-      socket.current.emit("acceptCall", { signal: data, to: caller })
+    peer.on("signal", async data => {
+      socket.current.emit("acceptCall", { signal: data, to: caller });
+      await new Audio('https://www.myinstants.com/media/sounds/join_call_6a6a67d6bcc7a4e373ed40fdeff3930a.mp3').play()
     })
 
     peer.on("stream", stream => {
@@ -170,10 +177,10 @@ function Room() {
 
     <div className='grid-4'>
       <div> {console.log(users)}
-        {media.stream && <video playsInline muted ref={userVideo} autoPlay />}
-        {currentUser && <span>{currentUser.username}</span>}
-        <button onClick={onToggleCam}>{media.video ? 'enable Video' : 'disbale Video'}</button>
-        <button onClick={onToggleAudio}>{media.audio ? 'enable Audio' : 'disbale Audio'}</button>
+        {media.stream && <video playsInline muted ref={userVideo} autoPlay />}        
+        {currentUser && <div>{currentUser.username}</div>}
+        <button className='btn' onClick={onToggleCam} title="Toggle Video">{media.video ? 'enable Video' : 'disbale Video'}</button>
+        <button className='btn' onClick={onToggleAudio} title="Toggle Audio">{media.audio ? 'enable Audio' : 'disbale Audio'}</button>
         {/* <button onClick={onScreenShare}>Screen Share</button> */}
       </div>
 
@@ -182,31 +189,32 @@ function Room() {
 
     <div className='h-100 bg-dark'>
       <form>
-        <input type="text" required />
-        <button>send</button>
+        <input type="text" placeholder='message' required />
+        <button className='btn' type='submit'>send</button>
       </form>
     </div>
 
-    {!query.get('initiator') && <div className='pub'>
+    {!query.get('initiator') && <AlertModal status={true}>
       {!callAccepted && users && users.map(user => {
         if (user.id === currentUser.id) {
           return null;
         }
         return (
-          <button key={user.id} onClick={() => startCall(user.id)}>get in to room</button>
+          <button className='btn' key={user.id} onClick={() => startCall(user.id)}>Join room</button>
         );
       })}
-    </div>}
+    </AlertModal>}
 
-    {query.get('initiator') && !receivingCall && <div className='pub'>
-      <input className='w-100' type="text" defaultValue={window.location.href.replace(/&initiator=true/g,'')} />
-    </div>}
+    {query.get('initiator') && !receivingCall && <AlertModal status={true}>
+      <input className='w-100' type="text" defaultValue={window.location.href.replace(/&initiator=true/g, '')} />
+    </AlertModal>}
 
 
-    {!callAccepted && receivingCall && <div className='pub'>
+    {!callAccepted && receivingCall && <AlertModal status={true}>
       <p>{caller} is calling you</p>
-      <button onClick={acceptCall}>Accept</button>
-    </div>}
+      <button className='btn' onClick={() => { onAcceptOrCancelCall(true) }}>Accept</button>
+      <button className='btn' onClick={() => { onAcceptOrCancelCall(false) }}>Cancel</button>
+    </AlertModal>}
   </main>
   );
 }
