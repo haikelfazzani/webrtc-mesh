@@ -7,7 +7,7 @@ const proxy_server = process.env.NODE_ENV === 'production'
   ? 'https://maxiserv.azurewebsites.net'
   : 'http://localhost:8000';
 
-function Room() {
+export default function Room() {
   const [users, setUsers] = useState([]);
 
   const [receivingCall, setReceivingCall] = useState(false);
@@ -32,8 +32,6 @@ function Room() {
       stream.getVideoTracks()[0].enabled = false;
       stream.getAudioTracks()[0].enabled = false;
 
-      console.log(query.get('initiator'));
-
       setMedia({
         audio: stream.getAudioTracks()[0].enabled,
         video: stream.getVideoTracks()[0].enabled,
@@ -49,7 +47,7 @@ function Room() {
       socket.current.emit('joined', {
         username: currentUser.username,
         roomID: query.get('roomID'),
-        currentUser
+        userId: socket.current.id
       });
     });
 
@@ -57,20 +55,36 @@ function Room() {
       setCurrentUser({ ...currentUser, id });
     });
 
-    socket.current.on("allUsers", (users) => {
+    socket.current.on("get-Users", (users) => {
       setUsers(users);
     });
 
-    socket.current.on("hey", (data) => {
+    socket.current.on("receiving-call", (data) => {
       setReceivingCall(true);
       setCaller(data.from);
       setCallerSignal(data.signal);
     });
 
-    socket.current.on("disconnect", (data) => {
-      console.log('disconnect');
-      currentPeer.removeStream(media.stream)
-      currentPeer.destroy()
+    socket.current.on("user-leaved-room", async ({ room, id }) => {
+      console.log('user disconnected', id, users);
+      await new Audio('https://www.myinstants.com/media/sounds/leave_call_bfab46cf473a2e5d474c1b71ccf843a1.mp3').play()
+      userVideo.current = null;
+      partnerVideo.current = null;
+      setCallAccepted(false)
+      setReceivingCall(false)
+      if (currentPeer) {
+        setMedia(null)
+        currentPeer.destroy()
+        currentPeer.removeStream(media.stream)
+      }
+    });
+
+    socket.current.on("disconnect", () => {
+      if (currentPeer) {
+        setMedia(null)
+        currentPeer.destroy()
+        currentPeer.removeStream(media.stream)
+      }
     })
   }, []);
 
@@ -83,7 +97,7 @@ function Room() {
     });
 
     peer.on("signal", async data => {
-      socket.current.emit("callUser", { userToCall: id, signalData: data, from: currentUser.id });
+      socket.current.emit("start-call-user", { userToCall: id, signalData: data, from: currentUser.id });
       await new Audio('https://www.myinstants.com/media/sounds/google-meet-ask-to-join-sound.mp3').play()
     })
 
@@ -99,12 +113,8 @@ function Room() {
     });
 
     socket.current.on("disconnect", async () => {
-      await new Audio('https://www.myinstants.com/media/sounds/leave_call_bfab46cf473a2e5d474c1b71ccf843a1.mp3').play()
-      userVideo.current = null;
-      partnerVideo.current = null;
-      media.stream(null);
-      setCallAccepted(false)
-      setReceivingCall(false)
+      peer.removeStream(media.stream)
+      peer.destroy()
     });
 
     setCurrentPeer(peer);
@@ -123,7 +133,7 @@ function Room() {
     });
 
     peer.on("signal", async data => {
-      socket.current.emit("acceptCall", { signal: data, to: caller });
+      socket.current.emit("accept-user-call", { signal: data, to: caller });
       await new Audio('https://www.myinstants.com/media/sounds/join_call_6a6a67d6bcc7a4e373ed40fdeff3930a.mp3').play()
     })
 
@@ -139,6 +149,7 @@ function Room() {
     })
   }
 
+  // media handling
   const onScreenShare = async () => {
     const constraints = { cursor: true };
     const shareStream = await navigator.mediaDevices.getDisplayMedia(constraints);
@@ -176,8 +187,8 @@ function Room() {
   return (<main>
 
     <div className='grid-4'>
-      <div> {console.log(users)}
-        {media.stream && <video playsInline muted ref={userVideo} autoPlay />}        
+      <div> {console.log(currentUser.id, users)}
+        {media.stream && <video playsInline muted ref={userVideo} autoPlay />}
         {currentUser && <div>{currentUser.username}</div>}
         <button className='btn' onClick={onToggleCam} title="Toggle Video">{media.video ? 'enable Video' : 'disbale Video'}</button>
         <button className='btn' onClick={onToggleAudio} title="Toggle Audio">{media.audio ? 'enable Audio' : 'disbale Audio'}</button>
@@ -218,5 +229,3 @@ function Room() {
   </main>
   );
 }
-
-export default Room;
