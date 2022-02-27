@@ -7,6 +7,9 @@
 
 .align-center {align-items: center;}
 
+.vertical-align {display: flex; align-items: center; justify-content: center;}
+
+.col-1 {justify-content: center !important;}
 
 .col-2>* {
   width: 47%;

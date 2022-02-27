@@ -5,7 +5,10 @@ main {
   background-color: var(--black);
 }
 
-.media-videos {display: flex; flex-wrap: wrap; justify-content: center; align-items: center;}
+.media-videos {
+  display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
+  padding: 20px;
+}
 
 .media-controls {
   position: fixed;
@@ -31,9 +34,9 @@ main {
 
 .box {
   position: relative;
-  overflow: auto;
 }
 
-.box>span {position: absolute; top: 0; left: 0;}
+.box>div { position: absolute; top: 0; left: 0; }
+.box img {width: 220px }
 
-video { width: 95%; border: 1px solid #fff; object-fit: cover;}
+video { width: 100%; border: 1px solid #fff; object-fit: cover;}

@@ -1,10 +1,11 @@
-export default function makeid(length) {
-  let result = '';
-  let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let charactersLength = characters.length;
-  for (let i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() *
-      charactersLength));
-  }
-  return result + '-' + Date.now();
+const names = ['James', 'Mike', 'Joe' , 'Sami', 'Ahmed', 'Fathi', 'Shamir', 'Jean', 'Vlad', 'Kao', 'George',
+'Billel', 'Kamel', 'Haikel', 
+'Khaeled', 'Ramzi',
+'Loa', 'Paolo',
+'Salah', 'Mandi',
+'Saif', 'Wahbi'
+]
+
+export default function makeid() {
+  return names[Math.floor(Math.random() * names.length)] + '-' + Date.now();
 }

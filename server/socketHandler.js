@@ -1,29 +1,29 @@
+const MemUsers = require('./MemUsers');
+
 const users = {};
 const socketToRoom = {};
 const numberOfUsersInRoom = 4;
 let currentRoomID = null;
 
+
 module.exports = function socketHandler(socket, io) {
 
-  socket.on("join room", async roomID => {
+  socket.on("join room", async ({ roomID, username }) => {
+    socket.data.username = username;
+    if (username) {
+      currentRoomID = roomID;
+      console.log("join room -------> ", 'Room: ' + roomID, socket.id);
+      socket.emit("user-wants-to-join-room", { peerID: socket.id });
+    }
+  });
+
+  socket.on("accept-user-to-join", async ({ roomID, peerCaller }) => {
     currentRoomID = roomID;
     await socket.join(roomID);
-    console.log("join room -------> ", 'Room: ' + roomID, socket.id);
-    if (users[roomID]) {
-      const length = users[roomID].length;
-      if (length === numberOfUsersInRoom) {
-        socket.emit("room full");
-        return;
-      }
-      users[roomID].push(socket.id);
-    } else {
-      users[roomID] = [socket.id];
-    }
-
+    console.log("join room -------> ", 'Room: ' + roomID, peerCaller, socket.id);
+    MemUsers.add(roomID, peerCaller)
     socketToRoom[socket.id] = roomID;
-    const usersInThisRoom = users[roomID].filter(id => id !== socket.id);
-
-    socket.emit("get-users", { usersInThisRoom, currentUserId: socket.id });
+    socket.emit("get-users", { MemUsers: MemUsers.add(roomID, peerCaller), peerID: socket.id });
   });
 
   socket.on("sending signal", ({ signal, userToSignal, callerID }) => {
@@ -36,12 +36,7 @@ module.exports = function socketHandler(socket, io) {
 
   socket.on('disconnect', () => {
     const roomID = socketToRoom[socket.id];
-    let room = users[roomID];
-    if (room) {
-      room = room.filter(id => id !== socket.id);
-      users[roomID] = room;
-    }
-    console.log('disconnect -------> ', 'Room: ' + currentRoomID, socket.id, users);
+    const users = MemUsers.remove(roomID, socket.id);
     socket.to(currentRoomID).emit('user-leave', { peerID: socket.id, users });
     socket.to(currentRoomID).emit('get-users', users);
   });

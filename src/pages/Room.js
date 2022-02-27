@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
+import AlertModal from "../components/AlertModal";
 import Video from "../components/Video";
 import useQuery from "../hooks/useQuery";
+import makeid from "../utils/makeid";
 import './Room.css'
 
 let io = window.io;
@@ -11,14 +13,27 @@ const proxy_server = process.env.NODE_ENV === 'production'
   ? 'https://maxiserv.azurewebsites.net'
   : 'http://localhost:8000';
 
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 export default function Room() {
 
   const query = useQuery()
   const roomID = query.get('roomID');
   //const initiator = query.get('initiator');
 
-  const [media, setMedia] = useState({ audio: false, video: false });
-  const [showUsersOrChat, setShowUsersOrChat] = useState({ users: false, chat: false })
+  const [media, setMedia] = useState({ audio: false, video: false, stream: null });
+  const [showUsersOrChat, setShowUsersOrChat] = useState({ users: false, chat: false });
+  const [users, setUsers] = useState(null)
+
+  // peer who wants to join the room
+  const [peerCaller, setPeerCaller] = useState({
+    id: null,
+    isAccepted: false,
+    isCreatorOfRoom: false,
+    username: makeid(5)
+  });
 
   const [peers, setPeers] = useState([]);
   const socketRef = useRef();
@@ -43,8 +58,6 @@ export default function Room() {
     }
   };
 
-  const [currentUser, setCurrentUser] = useState({ id: '' })
-
   useEffect(() => {
     socketRef.current = io.connect(proxy_server);
     navigator.mediaDevices.getUserMedia(mediaConstraints).then(stream => {
@@ -53,36 +66,44 @@ export default function Room() {
       stream.getAudioTracks()[0].enabled = media.audio;
 
       userVideo.current.srcObject = stream;
-      socketRef.current.emit("join room", roomID);
-      setMedia({ ...media, stream })
+      socketRef.current.emit("join room", { roomID, username: peerCaller.username });
+      setMedia({ ...media, stream });
 
-      socketRef.current.on("get-users", ({ usersInThisRoom, currentUserId }) => {
-        if (usersInThisRoom) {
+      socketRef.current.on("user-wants-to-join-room", async ({ peerID }) => {
+        console.log("user-wants-to-join-room --> ", peerID);
+        setPeerCaller({ ...peerCaller, isAccepted: false, id: peerID })
+      });
+
+      socketRef.current.on("get-users", async ({ MemUsers, peerID }) => {
+        await sleep(1000)
+        if (MemUsers) {
           const npeers = [];
-          usersInThisRoom.forEach(userID => {
-            const peer = createPeer(userID, socketRef.current.id, stream, currentUserId);
-            peersRef.current.push({ peerID: userID, peer, });
+          MemUsers.forEach(user => {
+            const peer = createPeer(user.id, socketRef.current.id, stream, peerID);
+            peersRef.current.push({ peerID: user.id, peer, });
             npeers.push(peer);
           });
           setPeers(npeers);
-          console.log(npeers, peersRef.current, currentUserId);
+          setUsers(MemUsers)
         }
       });
 
-      socketRef.current.on("user joined", ({ signal, callerID }) => {
+      socketRef.current.on("user joined", async ({ signal, callerID }) => {
         const peer = addPeer(signal, callerID, stream);
         peersRef.current.push({ peerID: callerID, peer, })
         setPeers(users => [...users, peer]);
         console.log(callerID);
       });
 
-      socketRef.current.on("receiving returned signal", ({ signal, id }) => {
+      socketRef.current.on("receiving returned signal", async ({ signal, id }) => {
+        await sleep(1000)
         const item = peersRef.current.find(p => p.peerID === id);
         item.peer.signal(signal);
         console.log(id);
       });
 
       socketRef.current.on("user-leave", async ({ peerID }) => {
+        await sleep(1000)
         const newPeers = peersRef.current.filter(u => u.peerID !== peerID);
         peersRef.current = newPeers;
         setPeers(newPeers);
@@ -165,7 +186,6 @@ export default function Room() {
         const shareStream = await navigator.mediaDevices.getDisplayMedia(constraints);
         const screenTrack = shareStream.getTracks()[0];
         if (userVideo && userVideo.current) userVideo.current.srcObject = shareStream;
-        setMedia({ ...media, controls: !media.controls })
 
         if (peersRef.current[0]) {
           peersRef.current[0].peer.replaceTrack(
@@ -181,7 +201,6 @@ export default function Room() {
               media.stream
             );
             userVideo.current.srcObject = media.stream;
-            setMedia({ ...media, controls: false })
           }
         }
         break;
@@ -203,14 +222,28 @@ export default function Room() {
     }
   }
 
+  const onAcceptToJoin = (accepted) => {
+    if (accepted) {
+      socketRef.current.emit("accept-user-to-join", { roomID, peerCaller });
+      setPeerCaller({ ...peerCaller, isAccepted: true })
+    }
+  }
+
   return (
     <main> {console.log(peers.length)}
-      <div className={"h-100 w-100 media-videos overflow-auto col-" + (peers ? peers.length + 1 : 1)}>
 
-        <div className="box scale">
+      {!peerCaller.isAccepted && !peerCaller.isCreatorOfRoom && <AlertModal status={true}>
+        <p>{peerCaller.id}</p>
+        <button className='btn' onClick={() => { onAcceptToJoin(true) }}>Accept</button>
+        <button className='btn' onClick={() => { onAcceptToJoin(false) }}>Cancel</button>
+      </AlertModal>}
+
+
+      <div className={"h-100 w-100 media-videos justify-between col-" + (peers ? peers.length + 1 : 1)}>
+
+        <div className="box scale vertical-align">
           <video className="br7" muted ref={userVideo} autoPlay playsInline></video>
-          {/* <img alt="video conf" src="https://i.ibb.co/b3GzJn1/user.png" /> */}
-          <span>You</span>
+          {!media.video && <div className="w-100 h-100 vertical-align"><img alt="video conf" src="https://i.ibb.co/b3GzJn1/user.png" /></div>}
         </div>
         {peersRef.current.length > 0 && peersRef.current.map((user, index) => <Video key={index} user={user} />)}
       </div>
@@ -238,7 +271,7 @@ export default function Room() {
 
       {showUsersOrChat.users && <div className="h-100 bg-dark chat-box">
         <ul>
-          {peersRef.current && peersRef.current.map((peer, index) => <li key={index}>{peer.peerID}</li>)}
+          {users && users.map((peer, index) => <li key={index}>{peer.username}</li>)}
         </ul>
       </div>}
 
