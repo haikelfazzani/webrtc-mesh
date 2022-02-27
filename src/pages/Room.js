@@ -14,15 +14,35 @@ const proxy_server = process.env.NODE_ENV === 'production'
 export default function Room() {
 
   const query = useQuery()
-  const [media, setMedia] = useState({ audio: false, video: false });
   const roomID = query.get('roomID');
+  //const initiator = query.get('initiator');
+
+  const [media, setMedia] = useState({ audio: false, video: false });
+  const [showUsersOrChat, setShowUsersOrChat] = useState({ users: false, chat: false })
 
   const [peers, setPeers] = useState([]);
   const socketRef = useRef();
   const userVideo = useRef();
   const peersRef = useRef([]);
 
-  const mediaConstraints = { video: { height: 480, width: 640 }, audio: true };
+  const mediaConstraints = {
+    "audio": true,
+    "video": {
+      "width": {
+        "min": "200",
+        "max": "640"
+      },
+      "height": {
+        "min": "100",
+        "max": "480"
+      },
+      "frameRate": {
+        "min": "1",
+        "max": "30"
+      }
+    }
+  };
+
   const [currentUser, setCurrentUser] = useState({ id: '' })
 
   useEffect(() => {
@@ -62,10 +82,11 @@ export default function Room() {
         console.log(id);
       });
 
-      socketRef.current.on("user-leave", ({ peerID }) => {
+      socketRef.current.on("user-leave", async ({ peerID }) => {
         const newPeers = peersRef.current.filter(u => u.peerID !== peerID);
         peersRef.current = newPeers;
         setPeers(newPeers);
+        await new Audio('https://www.myinstants.com/media/sounds/leave_call_bfab46cf473a2e5d474c1b71ccf843a1.mp3').play()
       });
 
       socketRef.current.on("disconnect", payload => {
@@ -80,6 +101,7 @@ export default function Room() {
       const peer = new Peer({ initiator: true, trickle: false, stream, });
 
       peer.on("signal", signal => {
+        console.log(signal);
         socketRef.current.emit("sending signal", { userToSignal, callerID, signal })
       });
 
@@ -96,12 +118,13 @@ export default function Room() {
   }
 
   function addPeer(incomingSignal, callerID, stream) {
-    console.log('callerID ', callerID);
+    console.log('callerID ', incomingSignal, callerID);
     if (incomingSignal && callerID) {
       const peer = new Peer({ initiator: false, trickle: false, stream, })
 
-      peer.on("signal", signal => {
+      peer.on("signal", async signal => {
         socketRef.current.emit("returning signal", { signal, callerID })
+        await new Audio('https://www.myinstants.com/media/sounds/join_call_6a6a67d6bcc7a4e373ed40fdeff3930a.mp3').play()
       });
 
       peer.on('close', () => {
@@ -164,7 +187,15 @@ export default function Room() {
         break;
 
       case 'hangout':
+        window.location.href = '/'
+        break;
 
+      case 'show-users':
+        setShowUsersOrChat({ ...showUsersOrChat, users: !showUsersOrChat.users })
+        break;
+
+      case 'show-chat':
+        setShowUsersOrChat({ ...showUsersOrChat, chat: !showUsersOrChat.chat })
         break;
 
       default:
@@ -174,12 +205,14 @@ export default function Room() {
 
   return (
     <main> {console.log(peers.length)}
-      <div className={"h-100 w-100 media-videos grid-" + (peers ? peers.length + 1 : 1)}>
-        <div>
-          <video className="br7 fadein" muted ref={userVideo} autoPlay playsInline></video>
+      <div className={"h-100 w-100 media-videos overflow-auto col-" + (peers ? peers.length + 1 : 1)}>
+
+        <div className="box scale">
+          <video className="br7" muted ref={userVideo} autoPlay playsInline></video>
+          {/* <img alt="video conf" src="https://i.ibb.co/b3GzJn1/user.png" /> */}
           <span>You</span>
         </div>
-        {peersRef.current.length > 0 && peersRef.current.map((user, index) => <Video clx="br7 fadein" key={index} user={user} />)}
+        {peersRef.current.length > 0 && peersRef.current.map((user, index) => <Video key={index} user={user} />)}
       </div>
 
       <div className='media-controls d-flex justify-center align-center blur br7'>
@@ -193,18 +226,27 @@ export default function Room() {
           </button>
 
           <button onClick={() => { onMedia('share-screen'); }}><i className='fa fa-desktop'></i></button>
+          <button onClick={() => { onMedia('show-chat'); }}><i className='fa fa-comments'></i></button>
+          <button onClick={() => { onMedia('show-users'); }}><i className='fa fa-users'></i></button>
+          <button onClick={() => { onMedia('show-users'); }}><i className='fa fa-folder-open'></i></button>
 
-          <button className="bg-red" onClick={() => { onMedia('video'); }} title="Hangout">
+          <button className="bg-red" onClick={() => { onMedia('hangout'); }} title="Hangout">
             <i className='fa fa-phone-slash'></i>
           </button>
         </div>
       </div>
 
-      <div className="chat-box">
+      {showUsersOrChat.users && <div className="h-100 bg-dark chat-box">
         <ul>
           {peersRef.current && peersRef.current.map((peer, index) => <li key={index}>{peer.peerID}</li>)}
         </ul>
-      </div>
+      </div>}
+
+      {showUsersOrChat.chat && <div className="h-100 bg-dark chat-box">
+        <ul>
+          {peersRef.current && peersRef.current.map((peer, index) => <li key={index}>{peer.peerID}</li>)}
+        </ul>
+      </div>}
     </main>
   );
 };

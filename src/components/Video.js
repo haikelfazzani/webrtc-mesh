@@ -11,8 +11,8 @@ export default function Video({ user , clx}) {
     }
   }, []);
 
-  return (<div>
-    <video className={clx} playsInline autoPlay ref={ref}></video>
+  return (<div className="box scale">
+    <video className="br7" playsInline autoPlay ref={ref}></video>
     <span>{user.peerID}</span>
   </div>);
 }

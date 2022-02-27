@@ -4,11 +4,11 @@ import Nav from '../components/Nav'
 
 export default function Home() {
   return (
-    <div>
+    <>
       <Nav />
 
       <section className='grid-2 container'>
-        <div className='h-align'>
+        <div className='d-flex flex-column justify-center'>
           <h1>La visioconférence haute qualité, maintenant disponible pour tous</h1>
           <p>Nous avons adapté Google Meet, notre service de visioconférence professionnel sécurisé, afin de le rendre disponible pour tous.</p>
 
@@ -21,8 +21,8 @@ export default function Home() {
           <Link className='btn bg-blue' to={{ pathname: '/room', search: 'roomID=' + window.cryptoUid(12) + '&initiator=' + true }}>Create room</Link>
         </div>
 
-        <img src="https://i.ibb.co/vJ2Mtdk/business-5840870-960-720.png" alt="video" />
+        <img src="https://i.ibb.co/b3GzJn1/user.png" alt="video" />
       </section>
-    </div>
+    </>
   )
 }

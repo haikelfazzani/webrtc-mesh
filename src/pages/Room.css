@@ -1,12 +1,11 @@
 main {
   width: 100vw;
   height: 100vh;
+  display: flex;
   background-color: var(--black);
 }
 
-video {width: 100%; border: 1px solid #fff;}
-
-.chat-box {width: 250px; position: fixed; right: 0; top: 0;}
+.media-videos {display: flex; flex-wrap: wrap; justify-content: center; align-items: center;}
 
 .media-controls {
   position: fixed;
@@ -27,3 +26,14 @@ video {width: 100%; border: 1px solid #fff;}
   padding: 12px 15px;
   cursor: pointer;
 }
+
+.chat-box {width: 350px; position: fixed; right: 0; top: 0;}
+
+.box {
+  position: relative;
+  overflow: auto;
+}
+
+.box>span {position: absolute; top: 0; left: 0;}
+
+video { width: 95%; border: 1px solid #fff; object-fit: cover;}

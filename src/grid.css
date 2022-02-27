@@ -1,36 +1,33 @@
 .d-flex {display: flex;}
+
+.flex-column {flex-direction: column;}
   
 .justify-between {justify-content: space-between;}
 .justify-center {justify-content: center;}
 
 .align-center {align-items: center;}
 
-.h-align {
-  display: flex; flex-direction: column; justify-content: center;
+
+.col-2>* {
+  width: 47%;
+  max-width: 47%;
+}
+  
+.col-3>* {
+  width: 30%;
+  max-width: 30%;
+}
+
+.col-4>* {
+  width: 22%;
+  max-width: 22%;
 }
 
 .grid-2 {
-    display: grid;
-    grid-template-columns: repeat(2, 47%);
-    justify-content: center;
-    align-items: center;
-    gap: 20px;
-  }
-  
-  .grid-3 {
-    display: grid;
-    grid-template-columns: repeat(3, 30%);
-    justify-content: center;
-    align-items: center;
-    gap: 20px;
-  }
-  
-  .grid-4 {
-    width: 100%;
-    display: grid;
-    grid-template-columns: repeat(4, 23%);
-    justify-content: center;
-    align-items: center;
-    gap: 20px;
-  }
+  display: grid;
+  grid-template-columns: 50% 40%;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
   

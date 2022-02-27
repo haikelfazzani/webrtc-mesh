@@ -10,6 +10,7 @@
 - [ ] Nginx
 - [ ] Jenkins
 - [ ] End to End Encryption
+- [ ] PWA
 
 ### Media
 - [x] disbale video
@@ -18,6 +19,7 @@
 - [ ] file sharing
 - [ ] screen screen sharing
 - [ ] Recording video / audio
+- [ ] Whiteboard
 
 # Author
 - Haikel Fazzani
