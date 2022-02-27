@@ -3,6 +3,7 @@
   --black:#0e0e0e;
   --white: #fff;
   --blue:#0098f8;
+  --red:#cd0000;
   --light:rgb(54, 54, 54);
   --box-shad: 0px 5px 18px rgb(0 0 0 / 20%);
   --light-shadow: 0 3px 1px -2px rgb(0 0 0 / 20%), 0 2px 2px 0 rgb(0 0 0 / 14%), 0 1px 5px 0 rgb(0 0 0 / 12%);
@@ -69,34 +70,13 @@ a {color: var(--white);}
   line-height: 1 !important;
   letter-spacing: 0.6px; border-radius: 3px;}
 
-
-/*******************************************/
-.grid-2 {
-  width: 100%;
-  display: grid;
-  grid-template-columns: 50% 43%;
-  justify-content: space-between;
-  gap: 70px;
-}
-
-.d-flex {display: flex;}
-
-.justify-between {justify-content: space-between;}
-.justify-center {justify-content: center;}
-
-.align-center {align-items: center;}
-
-.h-align {
-  display: flex; flex-direction: column; justify-content: center;
-}
-
+.btn:hover, button:hover { opacity: 0.8;}
 /**********************************************************************/
 h1 {font-size: 2.5rem;}
 
 .bg-dark {background-color: var(--dark);}
 .bg-blue {background-color: var(--blue);}
-
-.red {color: red;}
+.bg-red {background-color: var(--red);}
 
 .text-center {text-align: center;}
 
@@ -113,4 +93,20 @@ h1 {font-size: 2.5rem;}
 .blur {
   background-color: rgba(31, 31, 31, 0.856);
   backdrop-filter: blur(5px);
+}
+
+
+
+
+.fadein {
+  animation:fadeIn .25s linear;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity:0
+  }
+  100% {
+    opacity:1;
+  }
 }

@@ -3231,7 +3231,7 @@ debug@2.6.9, debug@^2.6.0, debug@^2.6.9:
   dependencies:
     ms "2.0.0"
 
-debug@4, debug@^4.1.0, debug@^4.1.1, debug@^4.3.2, debug@~4.3.1, debug@~4.3.2:
+debug@4, debug@^4.1.0, debug@^4.1.1, debug@^4.3.2, debug@^4.3.3, debug@~4.3.1, debug@~4.3.2:
   version "4.3.3"
   resolved "https://registry.yarnpkg.com/debug/-/debug-4.3.3.tgz#04266e0b70a98d4462e6e288e38259213332b664"
   integrity sha512-/zxw5+vh1Tfv+4Qn7a5nsbcJKPaSvCDhojn6FEl9vupwK2VCSDtEiEtqr8DFtzYFOdz63LBkxec7DYuc2jon6Q==
@@ -7005,6 +7005,13 @@ react-is@^17.0.1:
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-17.0.2.tgz#e691d4a8e9c789365655539ab372762b0efb54f0"
   integrity sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w==
 
+react-packed-grid@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/react-packed-grid/-/react-packed-grid-2.1.0.tgz#3932c11d4bf3837823cd3ba7b7199272815cf150"
+  integrity sha512-oY1r8c1qLHRKaOTOmTs3GIRDKTSHbEs5WRXXP3pYwPxj6KPj+aKeQ45wA1TZuQc8oAoNOA5SPRvRn6KlSTrqHA==
+  dependencies:
+    rect-scaler "^1.0.0"
+
 react-refresh@^0.11.0:
   version "0.11.0"
   resolved "https://registry.yarnpkg.com/react-refresh/-/react-refresh-0.11.0.tgz#77198b944733f0f1f1a90e791de4541f9f074046"
@@ -7130,6 +7137,11 @@ readdirp@~3.6.0:
   integrity sha512-hOS089on8RduqdbhvQ5Z37A0ESjsqz6qnRcffsMU3495FuTdqSm+7bhJ29JvIOsBDEEnan5DPu9t3To9VRlMzA==
   dependencies:
     picomatch "^2.2.1"
+
+rect-scaler@^1.0.0, rect-scaler@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/rect-scaler/-/rect-scaler-1.1.0.tgz#05bfe20e27f8e181d4b88273c2ad70c2c8093e2f"
+  integrity sha512-zqvIrh6x5ZdBGvtb7K0Zor6uFdEOmZr19lgcxb9Fp4IyfWl+GV+i5SVXirbg/vFzboBB3EB9fTBHr/vTonPBdQ==
 
 recursive-readdir@^2.2.2:
   version "2.2.2"

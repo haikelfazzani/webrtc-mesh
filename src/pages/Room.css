@@ -1,42 +1,29 @@
 main {
-    width: 100vw;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--black);
+}
+
+video {width: 100%; border: 1px solid #fff;}
+
+.chat-box {width: 250px; position: fixed; right: 0; top: 0;}
 
 .media-controls {
-    height: 50px;
-    width: 100%;
-    background-color: rgba(0, 0, 0, 0.219);
-    border-top: 1px solid var(--light);
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  overflow: auto;
 }
 
+.media-controls > div {
+  min-width: 120px;
+  background-color: var(--dark);
+}
+  
 .media-controls button {
-    font-size: 22px;
-    color: #fff;
-    padding: 0 15px;
-    cursor: pointer;
+  font-size: 22px;
+  color: #fff;
+  padding: 12px 15px;
+  cursor: pointer;
 }
-
-.media-videos {
-    width: 100%;
-    height: calc(100% - 70px);
-    display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  justify-items: stretch;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  grid-gap: 10px;
-  padding: 20px;
-}
-
-video {height: auto;
-    width: 100%;
-    max-width: 640px;}
-
-    .chat-box {width: 250px; position: fixed; right: 0; top: 0;}

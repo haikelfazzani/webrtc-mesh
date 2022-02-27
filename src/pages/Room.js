@@ -1,8 +1,11 @@
-import React, { useEffect, useState, useRef } from 'react';
-import AlertModal from '../components/AlertModal';
-import useQuery from '../hooks/useQuery';
-import makeid from '../utils/makeid';
+import React, { useEffect, useRef, useState } from "react";
+import Video from "../components/Video";
+import useQuery from "../hooks/useQuery";
 import './Room.css'
+
+let io = window.io;
+let Peer = window.SimplePeer;
+
 
 const proxy_server = process.env.NODE_ENV === 'production'
   ? 'https://maxiserv.azurewebsites.net'
@@ -10,241 +13,198 @@ const proxy_server = process.env.NODE_ENV === 'production'
 
 export default function Room() {
 
-  const [receivingCall, setReceivingCall] = useState(false);
-  const [caller, setCaller] = useState("");
-  const [callerSignal, setCallerSignal] = useState();
-  const [callAccepted, setCallAccepted] = useState(false);
+  const query = useQuery()
+  const [media, setMedia] = useState({ audio: false, video: false });
+  const roomID = query.get('roomID');
 
-  const [currentUser, setCurrentUser] = useState({ id: '', username: makeid(5) });
-  const currentPeer = useRef(null)
-
+  const [peers, setPeers] = useState([]);
+  const socketRef = useRef();
   const userVideo = useRef();
-  const partnerVideo = useRef();
-  const socket = useRef();
+  const peersRef = useRef([]);
 
-  let query = useQuery();
-  const connectedUsers = useRef([]);
-  const [media, setMedia] = useState({ video: false, audio: false, stream: null, controls: false });
-  const [showChat, setShowChat] = useState(false)
+  const mediaConstraints = { video: { height: 480, width: 640 }, audio: true };
+  const [currentUser, setCurrentUser] = useState({ id: '' })
 
   useEffect(() => {
-    socket.current = window.io.connect(proxy_server);
+    socketRef.current = io.connect(proxy_server);
+    navigator.mediaDevices.getUserMedia(mediaConstraints).then(stream => {
 
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
-      stream.getVideoTracks()[0].enabled = false;
-      stream.getAudioTracks()[0].enabled = false;
+      stream.getVideoTracks()[0].enabled = media.video;
+      stream.getAudioTracks()[0].enabled = media.audio;
 
-      setMedia({
-        audio: stream.getAudioTracks()[0].enabled,
-        video: stream.getVideoTracks()[0].enabled,
-        stream
+      userVideo.current.srcObject = stream;
+      socketRef.current.emit("join room", roomID);
+      setMedia({ ...media, stream })
+
+      socketRef.current.on("get-users", ({ usersInThisRoom, currentUserId }) => {
+        if (usersInThisRoom) {
+          const npeers = [];
+          usersInThisRoom.forEach(userID => {
+            const peer = createPeer(userID, socketRef.current.id, stream, currentUserId);
+            peersRef.current.push({ peerID: userID, peer, });
+            npeers.push(peer);
+          });
+          setPeers(npeers);
+          console.log(npeers, peersRef.current, currentUserId);
+        }
       });
 
-      if (userVideo.current) {
-        userVideo.current.srcObject = stream;
-      }
-    });
-
-    socket.current.on("connect", () => {
-      socket.current.emit('joined', {
-        username: currentUser.username,
-        roomID: query.get('roomID'),
-        userId: socket.current.id
+      socketRef.current.on("user joined", ({ signal, callerID }) => {
+        const peer = addPeer(signal, callerID, stream);
+        peersRef.current.push({ peerID: callerID, peer, })
+        setPeers(users => [...users, peer]);
+        console.log(callerID);
       });
-    });
 
-    socket.current.on("userId", (id) => {
-      setCurrentUser({ ...currentUser, id });
-    });
+      socketRef.current.on("receiving returned signal", ({ signal, id }) => {
+        const item = peersRef.current.find(p => p.peerID === id);
+        item.peer.signal(signal);
+        console.log(id);
+      });
 
-    socket.current.on("get-Users", (users) => {
-      connectedUsers.current = users;
-    });
+      socketRef.current.on("user-leave", ({ peerID }) => {
+        const newPeers = peersRef.current.filter(u => u.peerID !== peerID);
+        peersRef.current = newPeers;
+        setPeers(newPeers);
+      });
 
-    socket.current.on("receiving-call", (data) => {
-      setReceivingCall(true);
-      setCaller(data.from);
-      setCallerSignal(data.signal);
-    });
-
-    socket.current.on("user-leaved-room", async ({ room, id }) => {
-      const filtredUsers = connectedUsers.current.filter(u => u.id !== id && u.room === room);
-      connectedUsers.current = filtredUsers;
-      await new Audio('https://www.myinstants.com/media/sounds/leave_call_bfab46cf473a2e5d474c1b71ccf843a1.mp3').play()
-      userVideo.current = null;
-      partnerVideo.current = null;
-      setCallAccepted(false)
-      setReceivingCall(false)
-      if (currentPeer && currentPeer.current) {
-        currentPeer.current.destroy()
-        currentPeer.current.removeStream(media.stream)
-      }
-    });
-
-    socket.current.on("disconnect", () => {
-      if (currentPeer) {
-        setMedia(null)
-        currentPeer.current.destroy()
-        currentPeer.current.removeStream(media.stream)
-      }
+      socketRef.current.on("disconnect", payload => {
+        console.log('disconnect ', 'payload');
+      });
     })
-  }, []);
+  }, [roomID]);
 
-  function startCall(id) {
-    const peer = new window.SimplePeer({
-      initiator: true,
-      trickle: false,
-      stream: media.stream,
-      channelName: query.get('roomID')
-    });
+  function createPeer(userToSignal, callerID, stream, currentUserId) {
+    console.log('currentUserId ', currentUserId);
+    if (userToSignal && callerID) {
+      const peer = new Peer({ initiator: true, trickle: false, stream, });
 
-    currentPeer.current = peer
+      peer.on("signal", signal => {
+        socketRef.current.emit("sending signal", { userToSignal, callerID, signal })
+      });
 
-    peer.on("signal", async data => {
-      socket.current.emit("start-call-user", { userToCall: id, signalData: data, from: currentUser.id });
-      await new Audio('https://www.myinstants.com/media/sounds/google-meet-ask-to-join-sound.mp3').play()
-    })
+      peer.on('close', () => {
+        console.log('Peer close');
+      });
 
-    peer.on("stream", stream => {
-      if (partnerVideo.current) {
-        partnerVideo.current.srcObject = stream;
-      }
-    });
+      peer.on('error', (err) => {
+        console.log(err);
+      });
 
-    socket.current.on("callAccepted", signal => {
-      setCallAccepted(true);
-      peer.signal(signal);
-    });
-
-    socket.current.on("disconnect", async () => {
-      peer.removeStream(media.stream)
-      peer.destroy()
-    });
-  }
-
-  function onAcceptOrCancelCall(isCallAccepted) {
-    setCallAccepted(isCallAccepted);
-
-    if (!isCallAccepted) return;
-
-    const peer = new window.SimplePeer({
-      initiator: false,
-      trickle: false,
-      stream: media.stream,
-      channelName: query.get('roomID')
-    });
-
-    currentPeer.current = peer
-
-    peer.on("signal", async data => {
-      socket.current.emit("accept-user-call", { signal: data, to: caller });
-      await new Audio('https://www.myinstants.com/media/sounds/join_call_6a6a67d6bcc7a4e373ed40fdeff3930a.mp3').play()
-    })
-
-    peer.on("stream", stream => {
-      partnerVideo.current.srcObject = stream;
-    });
-
-    peer.signal(callerSignal);
-
-    socket.current.on("disconnect", () => {
-      peer.removeStream(media.stream)
-      peer.destroy()
-    })
-  }
-
-  // media handling
-  const onScreenShare = async () => {
-    const constraints = { cursor: true };
-    const shareStream = await navigator.mediaDevices.getDisplayMedia(constraints);
-    const screenTrack = shareStream.getTracks()[0];
-    if(userVideo && userVideo.current) userVideo.current.srcObject = shareStream;
-    setMedia({ ...media, controls: !media.controls })
-
-    if (currentPeer.current) {
-      currentPeer.current.replaceTrack(
-        currentPeer.current.streams[0].getVideoTracks()[0],
-        screenTrack,
-        media.stream
-      )
-
-      screenTrack.onended = function () {
-        currentPeer.current.replaceTrack(
-          currentPeer.current.streams[0].getVideoTracks()[0],
-          media.stream.getVideoTracks()[0],
-          media.stream
-        );
-        userVideo.current.srcObject = media.stream;
-        setMedia({ ...media, controls: false })
-      }
+      return peer;
     }
   }
 
-  const onToggleCam = () => {
-    media.stream.getVideoTracks()[0].enabled = !media.stream.getVideoTracks()[0].enabled
-    setMedia({ ...media, video: !media.video });
+  function addPeer(incomingSignal, callerID, stream) {
+    console.log('callerID ', callerID);
+    if (incomingSignal && callerID) {
+      const peer = new Peer({ initiator: false, trickle: false, stream, })
+
+      peer.on("signal", signal => {
+        socketRef.current.emit("returning signal", { signal, callerID })
+      });
+
+      peer.on('close', () => {
+        console.log('Peer close');
+        const newPeers = peersRef.current.filter(u => u.peerID !== callerID);
+        peersRef.current = newPeers;
+        setPeers(newPeers);
+      });
+
+      peer.on('error', (err) => {
+        console.log(callerID, err);
+        const newPeers = peersRef.current.filter(u => u.peerID !== callerID);
+        peersRef.current = newPeers;
+        setPeers(newPeers);
+      });
+
+      peer.signal(incomingSignal);
+
+      return peer;
+    }
   }
 
-  const onToggleAudio = () => {
-    media.stream.getAudioTracks()[0].enabled = !media.stream.getAudioTracks()[0].enabled
-    setMedia({ ...media, audio: !media.audio })
-  }
+  const onMedia = async (mediaType) => {
+    switch (mediaType) {
+      case 'audio':
+        media.stream.getAudioTracks()[0].enabled = !media.stream.getAudioTracks()[0].enabled
+        setMedia({ ...media, audio: !media.audio })
+        break;
 
-  const onChat = ()=>{ setShowChat(!showChat) }
+      case 'video':
+        media.stream.getVideoTracks()[0].enabled = !media.stream.getVideoTracks()[0].enabled
+        setMedia({ ...media, video: !media.video })
+        break;
 
-  return (<main>
+      case 'share-screen':
+        console.log(peersRef.current);
+        const constraints = { cursor: true };
+        const shareStream = await navigator.mediaDevices.getDisplayMedia(constraints);
+        const screenTrack = shareStream.getTracks()[0];
+        if (userVideo && userVideo.current) userVideo.current.srcObject = shareStream;
+        setMedia({ ...media, controls: !media.controls })
 
-    <div className='w-100 media-videos'>
-      {media && media.stream && <video className='br7' playsInline ref={userVideo} autoPlay controls={media.controls} />}
-      {callAccepted && <video className='br7' playsInline ref={partnerVideo} autoPlay controls={media.controls}></video>}
-    </div>
+        if (peersRef.current[0]) {
+          peersRef.current[0].peer.replaceTrack(
+            peersRef.current[0].peer.streams[0].getVideoTracks()[0],
+            screenTrack,
+            media.stream
+          )
 
-    {currentUser && <div className='media-controls d-flex justify-center align-center blur'>
-      <div>
-        <button onClick={onToggleCam} title="Toggle Video">
-          <i className={media.video ? 'fa fa-video' : 'fa fa-video-slash'}></i>
-        </button>
-        <button onClick={onToggleAudio} title="Toggle Audio">
-          <i className={media.audio ? 'fa fa-microphone' : 'fa fa-microphone-slash'}></i>
-        </button>
-        <button onClick={onScreenShare}><i className='fa fa-desktop'></i></button>
-        <button onClick={onChat}><i className='fa fa-comments'></i></button>
-      </div>
-    </div>}
-
-    {showChat && <div className='h-100 chat-box bg-dark'>
-      <ul>
-        {connectedUsers.current.map(u => <li key={u.id}>{u.username} ({u.id})</li>)}
-      </ul>
-
-      <form>
-        <input type="text" placeholder='message' required />
-        <button className='btn' type='submit'>send</button>
-      </form>
-    </div>}
-
-    {!query.get('initiator') && <AlertModal status={true}>
-      {!callAccepted && connectedUsers.current && connectedUsers.current.map(user => {
-        if (user.id === currentUser.id) {
-          return null;
+          screenTrack.onended = function () {
+            peersRef.current[0].peer.replaceTrack(
+              peersRef.current[0].peer.streams[0].getVideoTracks()[0],
+              media.stream.getVideoTracks()[0],
+              media.stream
+            );
+            userVideo.current.srcObject = media.stream;
+            setMedia({ ...media, controls: false })
+          }
         }
-        return (
-          <button className='btn' key={user.id} onClick={() => startCall(user.id)}>Join room</button>
-        );
-      })}
-    </AlertModal>}
+        break;
 
-    {query.get('initiator') && !receivingCall && <AlertModal status={true}>
-      <input className='w-100' type="text" defaultValue={window.location.href.replace(/&initiator=true/g, '')} />
-    </AlertModal>}
+      case 'hangout':
 
+        break;
 
-    {!callAccepted && receivingCall && <AlertModal status={true}>
-      <p>{caller} is calling you</p>
-      <button className='btn' onClick={() => { onAcceptOrCancelCall(true) }}>Accept</button>
-      <button className='btn' onClick={() => { onAcceptOrCancelCall(false) }}>Cancel</button>
-    </AlertModal>}
+      default:
+        break;
+    }
+  }
 
-  </main>
+  return (
+    <main> {console.log(peers.length)}
+      <div className={"h-100 w-100 media-videos grid-" + (peers ? peers.length + 1 : 1)}>
+        <div>
+          <video className="br7 fadein" muted ref={userVideo} autoPlay playsInline></video>
+          <span>You</span>
+        </div>
+        {peersRef.current.length > 0 && peersRef.current.map((user, index) => <Video clx="br7 fadein" key={index} user={user} />)}
+      </div>
+
+      <div className='media-controls d-flex justify-center align-center blur br7'>
+        <div>
+          <button onClick={() => { onMedia('audio'); }} title="Toggle Audio">
+            <i className={media.audio ? 'fa fa-microphone' : 'fa fa-microphone-slash'}></i>
+          </button>
+
+          <button onClick={() => { onMedia('video'); }} title="Toggle Video">
+            <i className={media.video ? 'fa fa-video' : 'fa fa-video-slash'}></i>
+          </button>
+
+          <button onClick={() => { onMedia('share-screen'); }}><i className='fa fa-desktop'></i></button>
+
+          <button className="bg-red" onClick={() => { onMedia('video'); }} title="Hangout">
+            <i className='fa fa-phone-slash'></i>
+          </button>
+        </div>
+      </div>
+
+      <div className="chat-box">
+        <ul>
+          {peersRef.current && peersRef.current.map((peer, index) => <li key={index}>{peer.peerID}</li>)}
+        </ul>
+      </div>
+    </main>
   );
-}
+};

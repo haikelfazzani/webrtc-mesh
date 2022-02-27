@@ -1,0 +1,36 @@
+.d-flex {display: flex;}
+  
+.justify-between {justify-content: space-between;}
+.justify-center {justify-content: center;}
+
+.align-center {align-items: center;}
+
+.h-align {
+  display: flex; flex-direction: column; justify-content: center;
+}
+
+.grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 47%);
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+  }
+  
+  .grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 30%);
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+  }
+  
+  .grid-4 {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(4, 23%);
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+  }
+  
