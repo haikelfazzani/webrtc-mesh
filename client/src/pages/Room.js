@@ -183,14 +183,11 @@ export default function Room(props) {
         }
         break;
 
-      case 'hangout':
-        const newPeers = peersRef.current.filter(u => u.peerID !== peerID);
-        peersRef.current = newPeers;
+      case 'hangout':        
         media.stream.getTracks().forEach((track) => track.stop());
         userVideo.current.srcObject = null;
         socketRef.current.close();
         socketRef.current.disconnect();
-        setPeers(newPeers);
         props.history.push('/')
         break;
 
