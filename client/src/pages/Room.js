@@ -184,8 +184,13 @@ export default function Room(props) {
         break;
 
       case 'hangout':
+        const newPeers = peersRef.current.filter(u => u.peerID !== peerID);
+        peersRef.current = newPeers;
         media.stream.getTracks().forEach((track) => track.stop());
         userVideo.current.srcObject = null;
+        socketRef.current.close();
+        socketRef.current.disconnect();
+        setPeers(newPeers);
         props.history.push('/')
         break;
 
@@ -199,7 +204,7 @@ export default function Room(props) {
       <PackedGrid
         className="w-100 h-100 align-center justify-center video-grid"
       >
-         <div className="w-100 box"><video className="w-100 br7" muted ref={userVideo} autoPlay playsInline controls></video></div>
+        <div className="w-100 box"><video className="w-100 br7" muted ref={userVideo} autoPlay playsInline controls></video></div>
         {peersRef.current.length > 0 && peersRef.current.map((user, index) => <VideoEL
           clx="br7"
           key={index}
