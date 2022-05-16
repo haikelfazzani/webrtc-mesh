@@ -12,13 +12,12 @@ export default function Home() {
           <h1>La visioconférence haute qualité, maintenant disponible pour tous</h1>
           <p>Nous avons adapté Google Meet, notre service de visioconférence professionnel sécurisé, afin de le rendre disponible pour tous.</p>
 
-
           <div>
             <p>Autorisez Meet à utiliser votre caméra et votre micro</p>
             <p>Meet doit pouvoir accéder à votre caméra et à votre micro pour permettre aux autres participants de vous voir et de vous entendre. Vous devrez confirmer ce choix sur chaque navigateur et ordinateur que vous utilisez.</p>
           </div>
 
-          <Link className='btn bg-blue' to={{ pathname: '/room', search: 'roomID=' + window.cryptoUid(12) + '&initiator=' + true }}>Create room</Link>
+          <Link className='btn bg-blue' to="/create-room"><i className='fa fa-phone'></i> Start Call</Link>
         </div>
 
         <img src="https://i.ibb.co/b3GzJn1/user.png" alt="video" />

@@ -13,7 +13,7 @@ const io = require('socket.io')(server, {
     allowEIO3: true
 });
 
-const socketHandler = require('./server/socketHandler');
+const socketHandler = require('./socketHandler');
 
 io.on('connection', socket => {
     socketHandler(socket, io);
