@@ -97,14 +97,10 @@ h1 {font-size: 2.5rem; margin-bottom: 0;}
 
 .overflow-auto {overflow: auto;}
 
-
-
 .fadein {
   animation:fadeIn .25s linear;
 }
 
-
-  
 .scale {animation: scale 0.25s;}
 
 @keyframes fadeIn {

@@ -195,7 +195,7 @@ export default function Room() {
 
   return (<main>
 
-    <div className='w-100 media-videos'>
+    <div className={'w-100 media-videos d-flex flex-wrap col-' (connectedUsers.current.length)}>
       {media && media.stream && <video className='br7' playsInline ref={userVideo} autoPlay controls={media.controls} />}
       {callAccepted && <video className='br7' playsInline ref={partnerVideo} autoPlay controls={media.controls}></video>}
     </div>

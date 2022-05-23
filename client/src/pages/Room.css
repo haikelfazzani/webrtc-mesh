@@ -19,16 +19,10 @@ main {
 .box>div { position: absolute; top: 0; left: 0; }
 .box img {width: 220px }
 
-video { outline: 1px solid rgb(71, 71, 71); border-radius: 7px; object-fit: cover; }
+video { 
+  margin: 20px;
+  background-color: black; object-fit: cover; max-height: 100%; max-width: 100%; }
 
-
-
-
-.media-videos {
-  display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
-  padding: 20px;
-}
 
 .media-controls {
   position: fixed;

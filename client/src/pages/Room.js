@@ -13,8 +13,8 @@ let Peer = window.SimplePeer;
 
 const mediaConstraints = {
   video: {
-    width: { min: 320, max: 480 },
-    height: { min: 414, max: 853 },
+    width: { exact: 320 },
+    height: { exact: 240 },
     frameRate: { ideal: 10, max: 15 }
   }, audio: true
 };
@@ -51,6 +51,7 @@ export default function Room(props) {
       socketRef.current.on("get-users", ({ usersInThisRoom, currentUserId }) => {
         if (usersInThisRoom) {
           const npeers = [];
+          console.log(currentUserId);
           usersInThisRoom.forEach(userID => {
             const peer = createPeer(userID, socketRef.current.id, stream, currentUserId);
             peersRef.current.push({ peerID: userID, peer, });
@@ -87,7 +88,7 @@ export default function Room(props) {
 
     return () => {
       window.currentMediaStream.getTracks().forEach((track) => track.stop());
-      userVideo.current.srcObject = null;
+      if (userVideo.current) userVideo.current.srcObject = null;
       socketRef.current.close();
       socketRef.current.disconnect();
     }
@@ -183,7 +184,7 @@ export default function Room(props) {
         }
         break;
 
-      case 'hangout':        
+      case 'hangout':
         media.stream.getTracks().forEach((track) => track.stop());
         userVideo.current.srcObject = null;
         socketRef.current.close();
@@ -198,16 +199,16 @@ export default function Room(props) {
 
   return (
     <main> {console.log(peers.length)}
-      <PackedGrid
-        className="w-100 h-100 align-center justify-center video-grid"
+      <div
+        className={'w-100 media-videos d-flex flex-wrap align-center col-' + (peersRef.current.length)}
       >
-        <div className="w-100 box"><video className="w-100 br7" muted ref={userVideo} autoPlay playsInline controls></video></div>
+        <video className="w-100 br7" muted ref={userVideo} autoPlay playsInline controls></video>
         {peersRef.current.length > 0 && peersRef.current.map((user, index) => <VideoEL
           clx="br7"
           key={index}
           user={user}
         />)}
-      </PackedGrid>
+      </div>
 
       <div className='media-controls d-flex justify-center align-center blur br7'>
         <div>
