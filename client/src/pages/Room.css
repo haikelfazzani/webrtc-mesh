@@ -8,8 +8,7 @@ main {
 }
 
 video {
-  background-color: black;
-  object-fit: cover;
+  background-color: black;  
   max-height: 100%;
   max-width: 100%;
 }

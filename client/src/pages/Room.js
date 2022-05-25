@@ -5,6 +5,7 @@ import useQuery from "../hooks/useQuery";
 import iceServersConfig from "../utils/iceServersConfig";
 
 import poster from '../utils/poster'
+import setMediaBitrate from "../utils/setMediaBitrate";
 
 import './Room.css';
 
@@ -95,7 +96,14 @@ export default function Room(props) {
 
   function createPeer(userToSignal, callerID, stream, currentUserId) {
     if (userToSignal && callerID) {
-      const peer = new Peer({ initiator: true, trickle: false, stream, config: iceServersConfig });
+      const peer = new Peer({
+        initiator: true,
+        trickle: false,
+        allowHalfTrickle:true,
+        stream,
+        config: iceServersConfig,
+        sdpTransform: (sdp) => setMediaBitrate(sdp, 0)
+      });
 
       peer.on("signal", signal => {
         socketRef.current.emit("sending signal", { userToSignal, callerID, signal })
@@ -106,6 +114,7 @@ export default function Room(props) {
       });
 
       peer.on('error', (err) => {
+        console.log(err);
         peersRef.current.forEach(u => u.peer.destroy());
         props.history.push('/');
       });
@@ -116,7 +125,14 @@ export default function Room(props) {
 
   function addPeer(incomingSignal, callerID, stream) {
     if (incomingSignal && callerID) {
-      const peer = new Peer({ initiator: false, trickle: false, stream, config: iceServersConfig })
+      const peer = new Peer({
+        initiator: false,
+        trickle: false,
+        allowHalfTrickle:true,
+        stream,
+        config: iceServersConfig,
+        sdpTransform: (sdp) => setMediaBitrate(sdp, 0)
+      });
 
       peer.on("signal", signal => {
         socketRef.current.emit("returning signal", { signal, callerID })

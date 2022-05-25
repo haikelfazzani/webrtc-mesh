@@ -10,7 +10,7 @@ export default function VideoEL({ user , media}) {
       })
     }
 
-    console.log(media, user);
+    //console.log(media, user);
   }, []);
 
   return <video className="w-100 h-100 br7" playsInline autoPlay ref={ref} controls></video>;
