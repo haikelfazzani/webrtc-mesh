@@ -2,61 +2,48 @@ main {
   width: 100vw;
   height: 100vh;
   display: flex;
+  align-items: center;
+  justify-content: center;
   background-color: var(--black);
 }
 
-.video-grid>div {
-  display: flex !important;
-  align-items: center !important;
+video {
+  background-color: black;
+  object-fit: cover;
+  max-height: 100%;
+  max-width: 100%;
 }
 
-.box {
-  position: relative;
-  padding: 20px;
-  overflow: hidden;
-}
-
-.box>div { position: absolute; top: 0; left: 0; }
-.box img {width: 220px }
-
-video { 
-  margin: 20px;
-  background-color: black; object-fit: cover; max-height: 100%; max-width: 100%; }
-
-
+/* enable audio/video, share shreen */
 .media-controls {
+  background-color: transparent;
   position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  overflow: auto;
+  bottom: 0;
+  left: 0;
+  padding: 10px 15px;
 }
 
-.media-controls > div {
-  min-width: 120px;
+.media-controls>div {
+  /* display: none; */
+  padding: 5px;
   background-color: var(--dark);
+  border-radius: 7px;
 }
-  
+
+/* .media-controls:hover div {
+  display: flex;
+} */
+
 .media-controls button {
-  font-size: 22px;
+  font-size: 18px;
   color: #fff;
   padding: 12px 15px;
   cursor: pointer;
 }
 
-.chat-box {width: 350px; position: fixed; right: 0; top: 0;}
-
-.fullscreen {
-  width: 100vw;
-  height: calc(100vh - 80px);
-  background-color: black;
-}
-
-
-.placeholder {
-  background-color: 'whitesmoke';
-  display: 'grid';  
-  width: '100%';
-  height: '100%';
-  border: '2px solid black';
+.chat-box {
+  width: 350px;
+  position: fixed;
+  right: 0;
+  top: 0;
 }

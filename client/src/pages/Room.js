@@ -3,10 +3,10 @@ import React, { useEffect, useRef, useState } from "react";
 import VideoEL from "../components/VideoEL";
 import useQuery from "../hooks/useQuery";
 import iceServersConfig from "../utils/iceServersConfig";
-import './Room.css'
 
-import { PackedGrid } from 'react-packed-grid';
+import poster from '../utils/poster'
 
+import './Room.css';
 
 let io = window.io;
 let Peer = window.SimplePeer;
@@ -24,17 +24,14 @@ const proxy_server = process.env.NODE_ENV === 'production'
   : 'http://localhost:8000';
 
 export default function Room(props) {
-
-  const query = useQuery()
-  const [media, setMedia] = useState({ audio: false, video: false });
+  const query = useQuery();
+  const [media, setMedia] = useState({ audio: false, video: false, oldStream: null, stream: null });
   const roomID = query.get('roomID');
 
   const [peers, setPeers] = useState([]);
   const socketRef = useRef();
   const userVideo = useRef();
   const peersRef = useRef([]);
-
-  const videosRef = useRef(null)
 
   useEffect(() => {
     socketRef.current = io.connect(proxy_server, { forceNew: true });
@@ -46,19 +43,18 @@ export default function Room(props) {
       window.currentMediaStream = stream;
       userVideo.current.srcObject = stream;
       socketRef.current.emit("join room", roomID);
-      setMedia({ ...media, stream })
+      setMedia({ ...media, stream, oldStream: stream })
 
       socketRef.current.on("get-users", ({ usersInThisRoom, currentUserId }) => {
         if (usersInThisRoom) {
           const npeers = [];
-          console.log(currentUserId);
+
           usersInThisRoom.forEach(userID => {
             const peer = createPeer(userID, socketRef.current.id, stream, currentUserId);
             peersRef.current.push({ peerID: userID, peer, });
             npeers.push(peer);
           });
           setPeers(npeers);
-          console.log(npeers, peersRef.current, currentUserId);
         }
       });
 
@@ -66,28 +62,31 @@ export default function Room(props) {
         const peer = addPeer(signal, callerID, stream);
         peersRef.current.push({ peerID: callerID, peer, })
         setPeers(users => [...users, peer]);
-        console.log(callerID);
       });
 
       socketRef.current.on("receiving returned signal", ({ signal, id }) => {
         const item = peersRef.current.find(p => p.peerID === id);
         item.peer.signal(signal);
-        console.log(id);
       });
 
       socketRef.current.on("user-leave", ({ peerID }) => {
+        const leftPeer = peersRef.current.find(u => u.peerID === peerID);
+        leftPeer.peer.destroy();
+
         const newPeers = peersRef.current.filter(u => u.peerID !== peerID);
         peersRef.current = newPeers;
+
         setPeers(newPeers);
       });
 
       socketRef.current.on("disconnect", payload => {
-        console.log('disconnect ', 'payload');
+        console.log('disconnect -----> ', payload);
       });
     })
 
     return () => {
       window.currentMediaStream.getTracks().forEach((track) => track.stop());
+      peersRef.current.forEach(u => u.peer.destroy());
       if (userVideo.current) userVideo.current.srcObject = null;
       socketRef.current.close();
       socketRef.current.disconnect();
@@ -95,7 +94,6 @@ export default function Room(props) {
   }, [roomID]);
 
   function createPeer(userToSignal, callerID, stream, currentUserId) {
-    console.log('currentUserId ', currentUserId);
     if (userToSignal && callerID) {
       const peer = new Peer({ initiator: true, trickle: false, stream, config: iceServersConfig });
 
@@ -108,7 +106,8 @@ export default function Room(props) {
       });
 
       peer.on('error', (err) => {
-        console.log(err);
+        peersRef.current.forEach(u => u.peer.destroy());
+        props.history.push('/');
       });
 
       return peer;
@@ -116,7 +115,6 @@ export default function Room(props) {
   }
 
   function addPeer(incomingSignal, callerID, stream) {
-    console.log('callerID ', callerID);
     if (incomingSignal && callerID) {
       const peer = new Peer({ initiator: false, trickle: false, stream, config: iceServersConfig })
 
@@ -125,21 +123,20 @@ export default function Room(props) {
       });
 
       peer.on('close', () => {
-        console.log('Peer close');
         const newPeers = peersRef.current.filter(u => u.peerID !== callerID);
         peersRef.current = newPeers;
         setPeers(newPeers);
       });
 
       peer.on('error', (err) => {
-        console.log(callerID, err);
-        const newPeers = peersRef.current.filter(u => u.peerID !== callerID);
-        peersRef.current = newPeers;
-        setPeers(newPeers);
+        console.log('error', err);
+        peersRef.current.forEach(u => {
+          console.log('Error ---> ', u);
+        });
+        // props.history.push('/');
       });
 
       peer.signal(incomingSignal);
-
       return peer;
     }
   }
@@ -152,18 +149,18 @@ export default function Room(props) {
         break;
 
       case 'video':
-        const isVideoEnabled = !media.stream.getVideoTracks()[0].enabled;
-        media.stream.getVideoTracks()[0].enabled = isVideoEnabled;
-        setMedia({ ...media, video: isVideoEnabled })
+        const isVideoEnabled = !media.oldStream.getVideoTracks()[0].enabled;
+        media.oldStream.getVideoTracks()[0].enabled = isVideoEnabled;
+        setMedia({ ...media, stream: media.oldStream, video: isVideoEnabled })
         break;
 
       case 'share-screen':
-        console.log(peersRef.current);
+
         const constraints = { cursor: true };
         const shareStream = await navigator.mediaDevices.getDisplayMedia(constraints);
         const screenTrack = shareStream.getTracks()[0];
+
         if (userVideo && userVideo.current) userVideo.current.srcObject = shareStream;
-        setMedia({ ...media, controls: !media.controls, stream: shareStream })
 
         if (peersRef.current[0]) {
           peersRef.current[0].peer.replaceTrack(
@@ -181,11 +178,19 @@ export default function Room(props) {
             userVideo.current.srcObject = media.stream;
             setMedia({ ...media, controls: false })
           }
+
+          setMedia({ ...media, video: true, controls: !media.controls, stream: shareStream });
         }
         break;
 
       case 'hangout':
+        if (!media.stream) return;
         media.stream.getTracks().forEach((track) => track.stop());
+
+        peersRef.current.forEach(u => {
+          u.peer.destroy();
+        });
+
         userVideo.current.srcObject = null;
         socketRef.current.close();
         socketRef.current.disconnect();
@@ -198,11 +203,25 @@ export default function Room(props) {
   }
 
   return (
-    <main> {console.log(peers.length)}
+    <main>
       <div
-        className={'w-100 media-videos d-flex flex-wrap align-center col-' + (peersRef.current.length)}
+        className={'w-100 h-100 media-videos justify-center align-center grid-' + (peersRef.current.length + 1)}
       >
-        <video className="w-100 br7" muted ref={userVideo} autoPlay playsInline controls></video>
+
+        <video className="w-100 h-100 br7"
+          poster={poster('You')}
+          ref={userVideo}
+          autoPlay
+          playsInline
+          controls
+          style={{ display: media.video ? 'block' : 'none' }}>
+        </video>
+
+        <div className="w-100 h-100 bg-black d-flex justify-center align-center br7"
+          style={{ display: media.video ? 'none' : 'flex' }}>
+          <img height="100" width="100" src={poster('You')} alt="You" />
+        </div>
+
         {peersRef.current.length > 0 && peersRef.current.map((user, index) => <VideoEL
           clx="br7"
           key={index}
@@ -210,7 +229,14 @@ export default function Room(props) {
         />)}
       </div>
 
-      <div className='media-controls d-flex justify-center align-center blur br7'>
+      <div className='w-100 media-controls d-flex justify-between'>
+
+        <div>
+          <button title="Number of users" disabled>
+            <i className="fa fa-users"></i> {peersRef.current.length + 1}
+          </button>
+        </div>
+
         <div>
           <button onClick={() => { onMedia('audio'); }} title="Toggle Audio">
             <i className={media.audio ? 'fa fa-microphone' : 'fa fa-microphone-slash'}></i>
@@ -224,6 +250,12 @@ export default function Room(props) {
 
           <button className="bg-red" onClick={() => { onMedia('hangout'); }} title="Hangout">
             <i className='fa fa-phone-slash'></i>
+          </button>
+        </div>
+
+        <div>
+          <button title="Open chat box" disabled>
+            <i className="fa fa-comments"></i>
           </button>
         </div>
       </div>
