@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
-import LocalVideo from "../components/LocalVideo";
+import LocalVideo from "../../components/LocalVideo";
 
-import RemoteVideo from "../components/RemoteVideo";
-import useQuery from "../hooks/useQuery";
-import iceServersConfig from "../utils/iceServersConfig";
-import setMediaBitrate from "../utils/setMediaBitrate";
+import RemoteVideo from "../../components/RemoteVideo";
+import useQuery from "../../hooks/useQuery";
+import iceServersConfig from "../../utils/iceServersConfig";
+import setMediaBitrate from "../../utils/setMediaBitrate";
 
 import './Room.css';
 

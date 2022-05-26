@@ -1,6 +1,6 @@
 import React from 'react'
-import useQuery from '../hooks/useQuery'
-import makeid from '../utils/makeid'
+import useQuery from '../../hooks/useQuery'
+import makeid from '../../utils/makeid'
 
 export default function JoinRoom(props) {
 

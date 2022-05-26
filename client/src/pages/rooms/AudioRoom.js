@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
-import LocalAudio from "../components/LocalAudio";
-import useQuery from "../hooks/useQuery";
-import iceServersConfig from "../utils/iceServersConfig";
-import setMediaBitrate from "../utils/setMediaBitrate";
+import LocalAudio from "../../components/LocalAudio";
+import useQuery from "../../hooks/useQuery";
+import iceServersConfig from "../../utils/iceServersConfig";
+import setMediaBitrate from "../../utils/setMediaBitrate";
 
 import './Room.css';
 
@@ -23,8 +23,9 @@ const proxy_server = process.env.NODE_ENV === 'production'
 
 export default function AudioRoom(props) {
   const query = useQuery();
-  const [media, setMedia] = useState({ audio: false, stream: null });
   const roomID = query.get('roomID');
+
+  const [media, setMedia] = useState({ audio: false, stream: null });
 
   const [peers, setPeers] = useState([]);
   const socketRef = useRef();
@@ -35,9 +36,6 @@ export default function AudioRoom(props) {
     navigator.mediaDevices.getUserMedia(mediaConstraints).then(stream => {
 
       stream.getAudioTracks()[0].enabled = media.audio;
-
-      window.currentMediaStream = stream;
-
       socketRef.current.emit("join room", roomID);
       setMedia({ ...media, stream })
 
@@ -76,13 +74,17 @@ export default function AudioRoom(props) {
       });
 
       socketRef.current.on("disconnect", payload => {
-        if(media && media.stream) media.stream.getTracks().forEach((track) => track.stop());
+        if (media.stream) media.stream.getTracks().forEach((track) => track.stop());
+        if (media.oldStream) media.oldStream.getTracks().forEach((track) => track.stop());
+
         console.log('disconnect -----> ', payload);
       });
     })
 
     return () => {
-      window.currentMediaStream.getTracks().forEach((track) => track.stop());
+      if (media.stream) media.stream.getTracks().forEach((track) => track.stop());
+      if (media.oldStream) media.oldStream.getTracks().forEach((track) => track.stop());
+
       peersRef.current.forEach(u => u.peer.destroy());
       socketRef.current.close();
       socketRef.current.disconnect();
@@ -158,13 +160,10 @@ export default function AudioRoom(props) {
   }
 
   const onHangout = () => {
-    if (!media.stream) return;
-    media.stream.getTracks().forEach((track) => track.stop());
+    if (media.stream) media.stream.getTracks().forEach((track) => track.stop());
+    if (media.oldStream) media.oldStream.getTracks().forEach((track) => track.stop());
 
-    peersRef.current.forEach(u => {
-      u.peer.destroy();
-    });
-
+    peersRef.current.forEach(u => u.peer.destroy());
     socketRef.current.close();
     socketRef.current.disconnect();
     props.history.push('/')

@@ -3,8 +3,8 @@ import ReactDOM from 'react-dom';
 import App from './App';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import reportWebVitals from './reportWebVitals';
-import './index.css';
-import './grid.css';
+import './styles/index.css';
+import './styles/grid.css';
 
 ReactDOM.render(
   <React.StrictMode>

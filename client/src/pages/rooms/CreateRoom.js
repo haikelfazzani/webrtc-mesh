@@ -1,5 +1,5 @@
 import React from 'react'
-import makeid from '../utils/makeid';
+import makeid from '../../utils/makeid';
 
 export default function CreateRoom(props) {
 
