@@ -200,7 +200,6 @@ export default function VideoRoom(props) {
         console.log('Start sharing screen');
 
         if (peersRef.current[0]) {
-
           peersRef.current[0].peer.replaceTrack(
             peersRef.current[0].peer.streams[0].getVideoTracks()[0],
             screenTrack,
@@ -208,14 +207,11 @@ export default function VideoRoom(props) {
           )
 
           screenTrack.onended = () => {
-
             peersRef.current[0].peer.replaceTrack(
               peersRef.current[0].peer.streams[0].getVideoTracks()[0],
               media.oldStream.getVideoTracks()[0],
               media.oldStream
             );
-
-            
 
             setMedia({ ...media, isSharingScreen: false, stream: media.oldStream });
           }
