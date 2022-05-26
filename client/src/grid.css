@@ -28,45 +28,10 @@
   justify-content: center;
 }
 
-.grid-1 {
-  display: grid;
-   grid-auto-flow: column dense;
-  grid-template-columns: 1fr;
-  gap: 20px;
-  /* width: calc(100vw - 40px); 
-  height: calc(100vh - 40px); */
-}
-
 .grid-2 {
-  display: grid;
-   grid-auto-flow: row dense;
-  grid-template-columns: repeat(2, calc(100vw / 2.2));
-  grid-template-rows: repeat(2, calc(100vh / 1.2));
-  gap: 20px;
-  padding: 20px;
-}
-
-.grid-3 {
-  display: grid;
-  grid-template-columns: repeat(2, calc(100vw / 3));
-  grid-template-rows: repeat(2, calc(100vh / 2.2));
-  gap: 20px;
-  padding: 20px;
-}
-
-.grid-4 {
-  display: grid;
-  grid-template-columns: repeat(2, calc(100vw / 4.4));
-  grid-template-rows: repeat(2, calc(100vh / 3));
-  gap: 20px;
-  padding: 20px;
-}
-
-/* .grid-2 {
   display: grid;
   grid-template-columns: 50% 40%;
   justify-content: space-between;
   align-items: center;
   gap: 10px;
 }
-   */

@@ -105,12 +105,8 @@ h1 {font-size: 2.5rem; margin-bottom: 0;}
 .scale {animation: scale 0.25s;}
 
 @keyframes fadeIn {
-  0% {
-    opacity:0
-  }
-  100% {
-    opacity:1;
-  }
+  0% { opacity:0; }
+  100% { opacity:1; }
 }
 
 @keyframes scale {

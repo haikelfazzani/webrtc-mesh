@@ -9,10 +9,15 @@ export default function CreateRoom(props) {
     props.history.push(`/room?roomID=${roomID}&username=${makeid(5)}&initiator=true`)
   }
 
+  const onCreateAudioRoom = () => {
+    props.history.push(`/audio-room?roomID=${roomID}&username=${makeid(5)}&initiator=true`)
+  }
+
   return (
     <div>CreateRoom
-
-      <button className='btn' onClick={onCreateRoom}>Create room</button>
+      <button className='btn mb-3' onClick={onCreateRoom}>Create room</button>
+      <div></div>
+      <button className='btn' onClick={onCreateAudioRoom}>Create audio room</button>
     </div>
   )
 }

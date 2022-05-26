@@ -15,23 +15,27 @@ video {
 
 /* enable audio/video, share shreen */
 .media-controls {
+  height: 70px;
   background-color: transparent;
   position: fixed;
   bottom: 0;
   left: 0;
   padding: 10px 15px;
+  overflow: hidden;
 }
 
 .media-controls>div {
-  /* display: none; */
-  padding: 5px;
-  background-color: var(--dark);
+  opacity: 0;
+  display: flex;  
   border-radius: 7px;
+  background-color: var(--dark);
+  padding: 5px;  
+  transition: opacity .2s;
 }
 
-/* .media-controls:hover div {
-  display: flex;
-} */
+.media-controls:hover div {
+  opacity: 1;
+}
 
 .media-controls button {
   font-size: 18px;
@@ -45,4 +49,38 @@ video {
   position: fixed;
   right: 0;
   top: 0;
+}
+
+/************ media grid *************/
+.grid-1 {
+  display: grid;
+  grid-auto-flow: column dense;
+  grid-template-columns: repeat(1, calc(100vw / 1));
+  grid-template-rows: repeat(1, calc(100vh / 1));
+  gap: 20px;
+}
+
+.grid-2 {
+  display: grid;
+  grid-auto-flow: row dense;
+  grid-template-columns: repeat(2, calc(100vw / 2.08));
+  grid-template-rows: repeat(2, calc(100vh / 1.06));
+  gap: 20px;
+  padding: 20px;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(2, calc(100vw / 3));
+  grid-template-rows: repeat(2, calc(100vh / 2.2));
+  gap: 20px;
+  padding: 20px;
+}
+
+.grid-4 {
+  display: grid;
+  grid-template-columns: repeat(2, calc(100vw / 4.4));
+  grid-template-rows: repeat(2, calc(100vh / 3));
+  gap: 20px;
+  padding: 20px;
 }
