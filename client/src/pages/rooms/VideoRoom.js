@@ -214,8 +214,8 @@ export default function VideoRoom(props) {
             );
 
             setMedia({ ...media, isSharingScreen: false, stream: media.oldStream });
+            console.log('End sharing screen');
           }
-          console.log('End sharing screen');
         }
         break;
 
@@ -237,7 +237,7 @@ export default function VideoRoom(props) {
   return (
     <main>
       <div
-        className={'w-100 h-100 media-videos justify-center align-center grid-' + (peersRef.current.length + 1)}
+        className={'w-100 h-100 justify-center align-center media-grid-' + (peersRef.current.length + 1)}
       >
         <LocalVideo media={media} />
         {peersRef.current.length > 0 && peersRef.current.map((user, index) => <RemoteVideo key={index} user={user} />)}

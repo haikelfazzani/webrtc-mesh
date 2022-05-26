@@ -171,7 +171,7 @@ export default function AudioRoom(props) {
 
   return (
     <main>
-      <div className={'w-100 h-100 media-videos justify-center align-center grid-' + (peersRef.current.length + 1)}>
+      <div className={'w-100 h-100 justify-center align-center media-grid-' + (peersRef.current.length + 1)}>
         {media.stream && <LocalAudio isLocal={true} media={media} autoPlay playsInline />}
         {peersRef.current.length > 0 && peersRef.current.map((user, index) => <LocalAudio key={index} user={user} />)}
       </div>

@@ -12,7 +12,7 @@ function LocalVideo({ media }) {
     }
   }, [media]);
 
-  if (media.video) {
+  if (media.video || media.isSharingScreen) {
     return <video
       ref={videoRef}
       className="w-100 h-100 br7"
