@@ -9,14 +9,18 @@ export default function RemoteVideo({ user }) {
       user.peer.on("stream", stream => {
         videoRef.current.srcObject = stream;
       });
+
+      // user.peer.on('track', (track, stream) => {
+      //   console.log(track, stream);
+      // })
     }
   }, []);
 
   return <div className="w-100 h-100 bg-black d-flex justify-center align-center br7">
-    {/* <img height="100" width="100" src={poster('You')} alt="You" /> */}
+    {/* <img height="100" width="100" src={poster(user.username)} alt="You" /> */}
     <video
       className="w-100 h-100 br7"
-      poster={poster(user.peerID)}
+      poster={poster(user.username)}
       playsInline
       autoPlay
       ref={videoRef}

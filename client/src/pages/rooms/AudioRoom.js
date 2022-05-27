@@ -24,6 +24,7 @@ const proxy_server = process.env.NODE_ENV === 'production'
 export default function AudioRoom(props) {
   const query = useQuery();
   const roomID = query.get('roomID');
+  const username = query.get('username');
 
   const [media, setMedia] = useState({ audio: false, stream: null });
 
@@ -36,7 +37,7 @@ export default function AudioRoom(props) {
     navigator.mediaDevices.getUserMedia(mediaConstraints).then(stream => {
 
       stream.getAudioTracks()[0].enabled = media.audio;
-      socketRef.current.emit("join room", roomID);
+      socketRef.current.emit("join room", { roomID, username });
       setMedia({ ...media, stream })
 
       socketRef.current.on("get-users", ({ usersInThisRoom, currentUserId }) => {

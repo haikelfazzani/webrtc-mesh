@@ -1,35 +1,26 @@
 const users = {};
-const socketToRoom = {};
-const numberOfUsersInRoom = 4;
 
 module.exports = function socketHandler(socket, io) {
-
-  socket.on("join room", async roomID => {
+  socket.on("join room", async ({ roomID, username }) => {
 
     socket.data.id = socket.id;
     socket.data.roomID = roomID;
+    socket.data.username = username;
 
     await socket.join(roomID);
-    
+
     if (users[roomID]) {
-      const length = users[roomID].length;
-      if (length === numberOfUsersInRoom) {
-        socket.emit("room full");
-        return;
-      }
-      users[roomID].push(socket.id);
+      if (!users[roomID].some(id => id === socket.id)) users[roomID].push(socket.id);
     } else {
       users[roomID] = [socket.id];
     }
 
-    socketToRoom[socket.id] = roomID;
     const usersInThisRoom = users[roomID].filter(id => id !== socket.id);
-
     socket.emit("get-users", { usersInThisRoom, currentUserId: socket.id });
   });
 
-  socket.on("sending signal", ({ signal, userToSignal, callerID }) => {
-    io.to(userToSignal).emit('user joined', { signal, callerID });
+  socket.on("sending signal", ({ signal, userToSignal, callerID, username }) => {
+    io.to(userToSignal).emit('user joined', { signal, callerID, username });
   });
 
   socket.on("returning signal", ({ signal, callerID }) => {
@@ -37,13 +28,14 @@ module.exports = function socketHandler(socket, io) {
   });
 
   socket.on('disconnect', () => {
-    let room = users[socket.data.roomID];
+    const roomID = socket.data.roomID;
+    let room = users[roomID];
     if (room) {
       room = room.filter(id => id !== socket.id);
-      users[socket.data.roomID] = room;
+      users[roomID] = room;
     }
-    console.log('disconnect -------> ', 'Room: ' + socket.data.roomID, socket.id, users);
-    socket.to(socket.data.roomID).emit('user-leave', { peerID: socket.id, users });
-    socket.to(socket.data.roomID).emit('get-users', users);
+    console.log('disconnect -------> ', 'Room: ' + roomID, socket.id, users);
+    io.to(roomID).emit('user-leave', { peerID: socket.id, users });
+    io.to(roomID).emit('get-users', users);
   });
 }

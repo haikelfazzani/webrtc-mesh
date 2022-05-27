@@ -24,6 +24,20 @@ const mediaConstraints = {
   }
 };
 
+const screenShareMediaConstraints = {
+  video: {
+    width: { max: 1280 },
+    height: { max: 720 },
+    aspectRatio: 1,
+    frameRate: { ideal: 10, max: 15 }
+  },
+  audio: {
+    sampleSize: 16,
+    channelCount: 2
+  },
+  cursor: true
+};
+
 const proxy_server = process.env.NODE_ENV === 'production'
   ? 'https://maxiserv.azurewebsites.net'
   : 'http://localhost:8000';
@@ -31,6 +45,7 @@ const proxy_server = process.env.NODE_ENV === 'production'
 export default function VideoRoom(props) {
   const query = useQuery();
   const roomID = query.get('roomID');
+  const username = query.get('username');
 
   const [media, setMedia] = useState({
     audio: false,
@@ -51,15 +66,15 @@ export default function VideoRoom(props) {
       stream.getVideoTracks()[0].enabled = media.video;
       stream.getAudioTracks()[0].enabled = media.audio;
 
-      socketRef.current.emit("join room", roomID);
+      socketRef.current.emit("join room", { roomID, username });
       setMedia({ ...media, stream, oldStream: stream })
 
-      socketRef.current.on("get-users", ({ usersInThisRoom, currentUserId }) => {
+      socketRef.current.on("get-users", ({ usersInThisRoom }) => {
         if (usersInThisRoom) {
           const npeers = [];
 
           usersInThisRoom.forEach(userID => {
-            const peer = createPeer(userID, socketRef.current.id, stream, currentUserId);
+            const peer = createPeer(userID, socketRef.current.id, stream);
             peersRef.current.push({ peerID: userID, peer, });
             npeers.push(peer);
           });
@@ -67,9 +82,9 @@ export default function VideoRoom(props) {
         }
       });
 
-      socketRef.current.on("user joined", ({ signal, callerID }) => {
+      socketRef.current.on("user joined", ({ signal, callerID, username }) => {
         const peer = addPeer(signal, callerID, stream);
-        peersRef.current.push({ peerID: callerID, peer, })
+        peersRef.current.push({ peerID: callerID, peer, username });
         setPeers(users => [...users, peer]);
       });
 
@@ -103,19 +118,20 @@ export default function VideoRoom(props) {
     }
   }, [roomID]);
 
-  function createPeer(userToSignal, callerID, stream, currentUserId) {
+  function createPeer(userToSignal, callerID, stream) {
     if (userToSignal && callerID) {
+
       const peer = new Peer({
         initiator: true,
         trickle: false,
         allowHalfTrickle: true,
-        stream,
+        streams: [stream],
         config: iceServersConfig,
-        sdpTransform: (sdp) => setMediaBitrate(sdp, 0)
+        sdpTransform: (sdp) => setMediaBitrate(sdp)
       });
 
       peer.on("signal", signal => {
-        socketRef.current.emit("sending signal", { userToSignal, callerID, signal })
+        socketRef.current.emit("sending signal", { userToSignal, callerID, signal, username })
       });
 
       peer.on('close', () => {
@@ -138,9 +154,9 @@ export default function VideoRoom(props) {
         initiator: false,
         trickle: false,
         allowHalfTrickle: true,
-        stream,
+        streams: [stream],
         config: iceServersConfig,
-        sdpTransform: (sdp) => setMediaBitrate(sdp, 0)
+        sdpTransform: (sdp) => setMediaBitrate(sdp)
       });
 
       peer.on("signal", signal => {
@@ -148,6 +164,7 @@ export default function VideoRoom(props) {
       });
 
       peer.on('close', () => {
+        console.log('Peer close');
         const newPeers = peersRef.current.filter(u => u.peerID !== callerID);
         peersRef.current = newPeers;
         setPeers(newPeers);
@@ -155,9 +172,6 @@ export default function VideoRoom(props) {
 
       peer.on('error', (err) => {
         console.log('error', err);
-        peersRef.current.forEach(u => {
-          console.log('Error ---> ', u);
-        });
         // props.history.push('/');
       });
 
@@ -180,31 +194,17 @@ export default function VideoRoom(props) {
         break;
 
       case 'share-screen':
-        const screenShareMediaConstraints = {
-          video: {
-            width: { max: 1280 },
-            height: { max: 720 },
-            aspectRatio: 1,
-            frameRate: { ideal: 10, max: 15 }
-          },
-          audio: {
-            sampleSize: 16,
-            channelCount: 2
-          },
-          cursor: true
-        };
-
         const shareStream = await navigator.mediaDevices.getDisplayMedia(screenShareMediaConstraints);
         const screenTrack = shareStream.getTracks()[0];
-        setMedia({ ...media, isSharingScreen: true, stream: shareStream });
         console.log('Start sharing screen');
 
         if (peersRef.current[0]) {
           peersRef.current[0].peer.replaceTrack(
             peersRef.current[0].peer.streams[0].getVideoTracks()[0],
             screenTrack,
-            media.stream
-          )
+            peersRef.current[0].peer.streams[0]
+          );
+          setMedia({ ...media, isSharingScreen: true, stream: shareStream });
 
           screenTrack.onended = () => {
             peersRef.current[0].peer.replaceTrack(

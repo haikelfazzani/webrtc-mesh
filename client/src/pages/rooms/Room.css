@@ -54,17 +54,17 @@ video {
 /************ media grid *************/
 .media-grid-1 {
   display: grid;
-  grid-auto-flow: column dense;
-  grid-template-columns: repeat(1, calc(100vw / 1));
-  grid-template-rows: repeat(1, calc(100vh / 1));
+  grid-template-columns: repeat(1, calc(100vw / 1.2));
+  grid-template-rows: repeat(1, calc(100vh / 1.2));
+  align-content: center;
   gap: 20px;
 }
 
 .media-grid-2 {
   display: grid;
-  grid-auto-flow: row dense;
   grid-template-columns: repeat(2, calc(100vw / 2.08));
-  grid-template-rows: repeat(2, calc(100vh / 1.06));
+  grid-template-rows: repeat(2, calc(100vh / 1.1));
+
   gap: 20px;
   padding: 20px;
 }
@@ -79,8 +79,16 @@ video {
 
 .media-grid-4 {
   display: grid;
-  grid-template-columns: repeat(2, calc(100vw / 4.4));
-  grid-template-rows: repeat(2, calc(100vh / 3));
+  grid-template-columns: repeat(2, calc(100vw / 3));
+  grid-template-rows: repeat(2, calc(100vh / 2.2));
+  gap: 20px;
+  padding: 20px;
+}
+
+.media-grid-5 {
+  display: grid;
+  grid-template-columns: repeat(2, calc(100vw / 3));
+  grid-template-rows: repeat(2, calc(100vh / 2.2));
   gap: 20px;
   padding: 20px;
 }

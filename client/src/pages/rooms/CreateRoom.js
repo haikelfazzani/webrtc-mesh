@@ -6,11 +6,11 @@ export default function CreateRoom(props) {
   const roomID = window.cryptoUid(12);
 
   const onCreateRoom = () => {
-    props.history.push(`/room?roomID=${roomID}&username=${makeid(5)}&initiator=true`)
+    props.history.push(`/room?roomID=${roomID}&peerid=${Date.now()}&username=${makeid(5)}&initiator=true`)
   }
 
   const onCreateAudioRoom = () => {
-    props.history.push(`/audio-room?roomID=${roomID}&username=${makeid(5)}&initiator=true`)
+    props.history.push(`/audio-room?roomID=${roomID}&peerid=${Date.now()}&username=${makeid(5)}&initiator=true`)
   }
 
   return (
