@@ -27,15 +27,19 @@ module.exports = function socketHandler(socket, io) {
     io.to(callerID).emit('receiving returned signal', { signal, id: socket.id });
   });
 
-  socket.on('disconnect', () => {
-    const roomID = socket.data.roomID;
-    let room = users[roomID];
-    if (room) {
-      room = room.filter(id => id !== socket.id);
-      users[roomID] = room;
-    }
-    console.log('disconnect -------> ', 'Room: ' + roomID, socket.id, users);
-    io.to(roomID).emit('user-leave', { peerID: socket.id, users });
-    io.to(roomID).emit('get-users', users);
-  });
+  for (const msg of ["disconnect", "disconnecting", "error"]) {
+    socket.on(msg, () => {
+      const roomID = socket.data.roomID;
+      let room = users[roomID];
+
+      if (room) {
+        room = room.filter(id => id !== socket.id);
+        users[roomID] = room;
+      }
+
+      console.log('disconnect -------> ', 'Room: ' + roomID, socket.id, users);
+      io.to(roomID).emit('user-leave', { peerID: socket.id, users });
+      io.to(roomID).emit('get-users', users);
+    });
+  }
 }

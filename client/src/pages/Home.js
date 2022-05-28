@@ -9,13 +9,10 @@ export default function Home() {
 
       <section className='grid-2 container'>
         <div className='d-flex flex-column justify-center'>
-          <h1>La visioconférence haute qualité, maintenant disponible pour tous</h1>
-          <p>Nous avons adapté Google Meet, notre service de visioconférence professionnel sécurisé, afin de le rendre disponible pour tous.</p>
+          <h1>What is Lorem Ipsum?</h1>
+          <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.</p>
 
-          <div>
-            <p>Autorisez Meet à utiliser votre caméra et votre micro</p>
-            <p>Meet doit pouvoir accéder à votre caméra et à votre micro pour permettre aux autres participants de vous voir et de vous entendre. Vous devrez confirmer ce choix sur chaque navigateur et ordinateur que vous utilisez.</p>
-          </div>
+          <p>It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.</p>
 
           <Link className='btn bg-blue' to="/create-room"><i className='fa fa-phone'></i> Start Call</Link>
         </div>

@@ -264,7 +264,7 @@ export default function VideoRoom(props) {
             <i className={media.isSharingScreen ? 'bi bi-tv-fill' : 'fa fa-desktop'}></i>
           </button>
 
-          <button className="bg-red" onClick={onHangout} title="Hangout">
+          <button onClick={onHangout} title="Hangout">
             <i className='fa fa-phone-slash'></i>
           </button>
         </div>
