@@ -1,12 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useParams } from "react-router-dom";
 import LocalVideo from "../../components/LocalVideo";
 
 import RemoteVideo from "../../components/RemoteVideo";
-import useQuery from "../../hooks/useQuery";
 import iceServersConfig from "../../utils/iceServersConfig";
+import makeid from "../../utils/makeid";
 import setMediaBitrate from "../../utils/setMediaBitrate";
-
-import './Room.css';
 
 let io = window.io;
 let Peer = window.SimplePeer;
@@ -43,9 +42,11 @@ const proxy_server = process.env.NODE_ENV === 'production'
   : 'http://localhost:8000';
 
 export default function VideoRoom(props) {
-  const query = useQuery();
-  const roomID = query.get('roomID');
-  const username = query.get('username');
+  const queryParams = useParams();
+
+  const roomID = queryParams.roomID;
+  const username = queryParams.username || makeid(5);
+  const peerid = queryParams.peerid || Date.now();
 
   const [media, setMedia] = useState({
     audio: false,
@@ -234,53 +235,49 @@ export default function VideoRoom(props) {
     props.history.push('/')
   }
 
-  return (
-    <main>
-      <div
-        className={'w-100 h-100 justify-center align-center media-grid-' + (peersRef.current.length + 1)}
-      >
-        <LocalVideo media={media} />
-        {peersRef.current.length > 0 && peersRef.current.map((user, index) => <RemoteVideo key={index} user={user} />)}
+  return (<main>
+    <div
+      className={'w-100 h-100 justify-center align-center media-grid-' + (peersRef.current.length + 1)}
+    >
+      <LocalVideo media={media} />
+      {peersRef.current.length > 0 && peersRef.current.map((user, index) => <RemoteVideo key={index} user={user} />)}
+    </div>
+
+    <div className='w-100 media-controls'>
+
+      <div className="d-flex align-center">
+        <small title="Number of users" disabled><i className="fa fa-link mr-1"></i>{window.location.href}</small>
       </div>
 
-      <div className='w-100 media-controls d-flex justify-between'>
+      <div>
+        <button onClick={() => { onMedia('audio'); }} title="Toggle Audio">
+          <i className={media.audio ? 'fa fa-microphone' : 'fa fa-microphone-slash'}></i>
+        </button>
 
-        <div>
-          <button title="Number of users" disabled>
-            <i className="fa fa-users"></i> {peersRef.current.length + 1}
-          </button>
-        </div>
+        <button onClick={() => { onMedia('video'); }} title="Toggle Video">
+          <i className={media.video ? 'fa fa-video' : 'fa fa-video-slash'}></i>
+        </button>
 
-        <div>
-          <button onClick={() => { onMedia('audio'); }} title="Toggle Audio">
-            <i className={media.audio ? 'fa fa-microphone' : 'fa fa-microphone-slash'}></i>
-          </button>
+        <button onClick={() => { onMedia('share-screen'); }} title="Toggle Share Screen">
+          <i className={media.isSharingScreen ? 'bi bi-tv-fill' : 'fa fa-desktop'}></i>
+        </button>
 
-          <button onClick={() => { onMedia('video'); }} title="Toggle Video">
-            <i className={media.video ? 'fa fa-video' : 'fa fa-video-slash'}></i>
-          </button>
-
-          <button onClick={() => { onMedia('share-screen'); }} title="Toggle Share Screen">
-            <i className={media.isSharingScreen ? 'bi bi-tv-fill' : 'fa fa-desktop'}></i>
-          </button>
-
-          <button onClick={onHangout} title="Hangout">
-            <i className='fa fa-phone-slash'></i>
-          </button>
-        </div>
-
-        <div>
-          <button title="Open chat box" disabled>
-            <i className="fa fa-comments"></i>
-          </button>
-        </div>
+        <button onClick={onHangout} title="Hangout">
+          <i className='fa fa-phone-slash'></i>
+        </button>
       </div>
 
-      {/* <div className="chat-box">
+      <div>
+        <button title="Open chat box" disabled>
+          <i className="fa fa-comments mr-1"></i>{peersRef.current.length + 1}
+        </button>
+      </div>
+    </div>
+
+    {/* <div className="chat-box">
         <ul>
           {peersRef.current && peersRef.current.map((peer, index) => <li key={index}>{peer.peerID}</li>)}
         </ul>
       </div> */}
-    </main>
-  );
+  </main>);
 };

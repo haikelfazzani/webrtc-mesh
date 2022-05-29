@@ -1,10 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useParams } from "react-router-dom";
 import LocalAudio from "../../components/LocalAudio";
-import useQuery from "../../hooks/useQuery";
 import iceServersConfig from "../../utils/iceServersConfig";
+import makeid from "../../utils/makeid";
 import setMediaBitrate from "../../utils/setMediaBitrate";
-
-import './Room.css';
 
 let io = window.io;
 let Peer = window.SimplePeer;
@@ -22,9 +21,11 @@ const proxy_server = process.env.NODE_ENV === 'production'
   : 'http://localhost:8000';
 
 export default function AudioRoom(props) {
-  const query = useQuery();
-  const roomID = query.get('roomID');
-  const username = query.get('username');
+  const queryParams = useParams();
+
+  const roomID = queryParams.roomID;
+  const username = queryParams.username || makeid(5);
+  const peerid = queryParams.peerid || Date.now();
 
   const [media, setMedia] = useState({ audio: false, stream: null });
 
@@ -178,10 +179,8 @@ export default function AudioRoom(props) {
       </div>
 
       <div className='w-100 media-controls d-flex justify-between'>
-        <div>
-          <button title="Number of users" disabled>
-            <i className="fa fa-users"></i> {peersRef.current.length + 1}
-          </button>
+        <div className="d-flex align-center">
+          <small title="Number of users" disabled><i className="fa fa-link mr-1"></i>{window.location.href}</small>
         </div>
 
         <div>
@@ -196,7 +195,7 @@ export default function AudioRoom(props) {
 
         <div>
           <button title="Open chat box" disabled>
-            <i className="fa fa-comments"></i>
+            <i className="fa fa-comments mr-1"></i>{peersRef.current.length + 1}
           </button>
         </div>
       </div>

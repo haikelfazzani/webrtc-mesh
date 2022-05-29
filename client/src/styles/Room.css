@@ -20,17 +20,28 @@ video {
   position: fixed;
   bottom: 0;
   left: 0;
+
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
   padding: 10px 15px;
   overflow: hidden;
 }
 
 .media-controls>div {
   display: flex;
-  padding: 5px;
+  justify-content: center;
+}
+
+.media-controls>div:first-child {  
+  justify-content: flex-start;
+}
+
+.media-controls>div:last-child {
+  justify-content: flex-end;
 }
 
 .media-controls button {
-  font-size: 22px;
+  font-size: 1.5rem;
   color: rgb(190, 190, 190);
   padding: 0 15px;
   cursor: pointer;

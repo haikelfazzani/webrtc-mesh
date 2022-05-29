@@ -1,24 +1,58 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
-import Nav from '../components/Nav'
+import React, { useEffect } from 'react';
+import Nav from '../components/Nav';
 
-export default function Home() {
-  return (
-    <>
-      <Nav />
+export default function Home(props) {
 
-      <section className='grid-2 container'>
-        <div className='d-flex flex-column justify-center'>
-          <h1>What is Lorem Ipsum?</h1>
-          <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.</p>
+  const roomID = window.cryptoUid(12);
 
-          <p>It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.</p>
+  const onCreateRoom = () => {
+    props.history.push('/rv/' + roomID)
+  }
 
-          <Link className='btn bg-blue' to="/create-room"><i className='fa fa-phone'></i> Start Call</Link>
+  const onCreateAudioRoom = () => {
+    props.history.push('/ra/' + roomID)
+  }
+
+  useEffect(() => {
+
+    const app = document.getElementById('app');
+
+    if (!app) return;
+
+    const typewriter = new window.Typewriter(app, { loop: true, delay: 75, });
+
+    typewriter
+      .typeString('Meet from anywhere.')
+      .pauseFor(2000)
+      .deleteChars(14)
+      .typeString('for everyone.')
+      .pauseFor(2000)
+      .deleteAll()
+      .typeString('Enjoy Time 🥳')
+      .pauseFor(5000)
+      .start();
+
+    return () => {}
+  }, [])
+
+
+  return (<>
+    <Nav />
+
+    <section className='container'>
+
+      <div className='d-flex flex-column align-center justify-center'>
+        <h1 className='uppercase bleu' id='app'>Meet from anywhere.</h1>
+        <h3 className='m-0 uppercase'>Free and simple video group for everyone</h3>
+
+        <div className='d-flex mt-3'>
+          <button className='btn mr-1' onClick={onCreateRoom}><i className='fa fa-video mr-1'></i>start Video room</button>
+          <button className='btn ml-1' onClick={onCreateAudioRoom}><i className='fa fa-headphones mr-1'></i>start audio room</button>
         </div>
+      </div>
 
-        <img src="https://i.ibb.co/b3GzJn1/user.png" alt="video" />
-      </section>
-    </>
-  )
+    </section>
+
+    <footer className='w-100 container text-center uppercase'>Created with <i className='fa fa-heart'></i> by Haikel Fazzani</footer>
+  </>)
 }
