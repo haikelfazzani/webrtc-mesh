@@ -17,10 +17,7 @@ const mediaConstraints = {
     // aspectRatio: 1,
     frameRate: { ideal: 10, max: 15 }
   },
-  audio: {
-    sampleSize: 16,
-    channelCount: 2
-  }
+  audio: true
 };
 
 const screenShareMediaConstraints = {
@@ -30,10 +27,7 @@ const screenShareMediaConstraints = {
     aspectRatio: 1,
     frameRate: { ideal: 10, max: 15 }
   },
-  audio: {
-    sampleSize: 16,
-    channelCount: 2
-  },
+  audio: true,
   cursor: true
 };
 
@@ -41,24 +35,22 @@ const proxy_server = process.env.NODE_ENV === 'production'
   ? 'https://maxiserv.azurewebsites.net'
   : 'http://localhost:8000';
 
+const username = localStorage.getItem('username') || makeid(5);
+
 export default function VideoRoom(props) {
   const queryParams = useParams();
-
   const roomID = queryParams.roomID;
-  const username = queryParams.username || makeid(5);
-  const peerid = queryParams.peerid || Date.now();
 
-  const [media, setMedia] = useState({
-    audio: false,
-    video: false,
-    isSharingScreen: false,
-    oldStream: null,
-    stream: null
-  });
+  const [media, setMedia] = useState({ audio: false, video: false, sharingScreen: false });
+  const [localStream, setLocalStream] = useState({ current: null, old: null })
 
   const [peers, setPeers] = useState([]);
   const socketRef = useRef();
   const peersRef = useRef([]);
+  const messagesRef = useRef();
+
+  const [showAside, setShowAside] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     socketRef.current = io.connect(proxy_server, { forceNew: true });
@@ -68,7 +60,7 @@ export default function VideoRoom(props) {
       stream.getAudioTracks()[0].enabled = media.audio;
 
       socketRef.current.emit("join room", { roomID, username });
-      setMedia({ ...media, stream, oldStream: stream })
+      setLocalStream({ current: stream, old: stream });
 
       socketRef.current.on("get-users", ({ usersInThisRoom }) => {
         if (usersInThisRoom) {
@@ -94,14 +86,45 @@ export default function VideoRoom(props) {
         item.peer.signal(signal);
       });
 
-      socketRef.current.on("user-leave", ({ peerID }) => {
+      socketRef.current.on("message", payload => {
+        const time = new Date().toLocaleTimeString().slice(0, 4);
+        const isYou = username === payload.username ? 'You' : payload.username.replace(/-\d+/g, '');
+
+        console.log(payload);
+
+        if (!messagesRef || !messagesRef.current) return;
+
+        if (+payload.type > 1) { // left room
+          messagesRef.current.innerHTML += `<li style="color:red">${isYou} ${payload.message} ${time}</li>`;
+        }
+
+        if (+payload.type === 1) { // join room
+          messagesRef.current.innerHTML += `<li style="color:#8bc34a">${isYou} ${payload.message} ${time}</li>`;
+        }
+
+        if (+payload.type < 1) {// chat message
+          messagesRef.current.innerHTML += `<li>
+          <h3 style="color: #00bcd4;font-weight: 600;margin:0;">
+          <i class="fa fa-user"></i> ${isYou}: <small style="color: #9f9f9f;">${time}</small></h3>
+          <br/>${payload.message}
+          </li>`;
+        }
+
+        messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
+      });
+
+      socketRef.current.on("user-leave", ({ peerID, username }) => {
         const leftPeer = peersRef.current.find(u => u.peerID === peerID);
-        leftPeer.peer.destroy();
+        if (leftPeer) {
+          leftPeer.peer.destroy();
 
-        const newPeers = peersRef.current.filter(u => u.peerID !== peerID);
-        peersRef.current = newPeers;
+          const newPeers = peersRef.current.filter(u => u.peerID !== peerID);
+          peersRef.current = newPeers;
 
-        setPeers(newPeers);
+          setPeers(newPeers);
+
+          socketRef.current.emit('message', { roomID, username, message: ' Left room', type: 2 });
+        }
       });
 
       socketRef.current.on("disconnect", payload => {
@@ -110,8 +133,8 @@ export default function VideoRoom(props) {
     })
 
     return () => {
-      if (media.stream) media.stream.getTracks().forEach((track) => track.stop());
-      if (media.oldStream) media.oldStream.getTracks().forEach((track) => track.stop());
+      if (localStream.current) localStream.current.getTracks().forEach((track) => track.stop());
+      if (localStream.old) localStream.old.getTracks().forEach((track) => track.stop());
 
       peersRef.current.forEach(u => u.peer.destroy());
       socketRef.current.close();
@@ -184,14 +207,19 @@ export default function VideoRoom(props) {
   const onMedia = async (mediaType) => {
     switch (mediaType) {
       case 'audio':
-        media.stream.getAudioTracks()[0].enabled = !media.stream.getAudioTracks()[0].enabled
-        setMedia({ ...media, audio: !media.audio })
+        const isAudioEnabled = localStream.current.getAudioTracks()[0].enabled;
+        localStream.current.getAudioTracks()[0].enabled = !isAudioEnabled;
+        setMedia({ ...media, audio: !isAudioEnabled })
         break;
 
       case 'video':
-        const isVideoEnabled = !media.oldStream.getVideoTracks()[0].enabled;
-        media.oldStream.getVideoTracks()[0].enabled = isVideoEnabled;
-        setMedia({ ...media, stream: media.oldStream, video: isVideoEnabled, isSharingScreen: false })
+        const isVideoEnabled = localStream.current.getVideoTracks()[0].enabled;
+        localStream.current.getVideoTracks()[0].enabled = !isVideoEnabled;
+        setMedia({ ...media, video: !isVideoEnabled, sharingScreen: false });
+        if (media.sharingScreen) {
+          localStream.old.getVideoTracks()[0].enabled = !isVideoEnabled;
+          setLocalStream({ ...localStream, current: localStream.old });
+        }
         break;
 
       case 'share-screen':
@@ -205,16 +233,19 @@ export default function VideoRoom(props) {
             screenTrack,
             peersRef.current[0].peer.streams[0]
           );
-          setMedia({ ...media, isSharingScreen: true, stream: shareStream });
+
+          setMedia({ ...media, sharingScreen: true });
+          setLocalStream({ ...localStream, current: shareStream });
 
           screenTrack.onended = () => {
             peersRef.current[0].peer.replaceTrack(
               peersRef.current[0].peer.streams[0].getVideoTracks()[0],
-              media.oldStream.getVideoTracks()[0],
-              media.oldStream
+              localStream.old.getVideoTracks()[0],
+              localStream.old
             );
 
-            setMedia({ ...media, isSharingScreen: false, stream: media.oldStream });
+            setMedia({ ...media, sharingScreen: false });
+            setLocalStream({ ...localStream, current: localStream.old });
             console.log('End sharing screen');
           }
         }
@@ -226,8 +257,8 @@ export default function VideoRoom(props) {
   }
 
   const onHangout = () => {
-    if (media.stream) media.stream.getTracks().forEach((track) => track.stop());
-    if (media.oldStream) media.oldStream.getTracks().forEach((track) => track.stop());
+    if (localStream.current) localStream.current.getTracks().forEach((track) => track.stop());
+    if (localStream.old) localStream.old.getTracks().forEach((track) => track.stop());
 
     peersRef.current.forEach(u => u.peer.destroy());
     socketRef.current.close();
@@ -235,19 +266,33 @@ export default function VideoRoom(props) {
     props.history.push('/')
   }
 
-  return (<main>
+  const onSendMessage = e => {
+    e.preventDefault();
+    const message = e.target.elements[0].value;
+    socketRef.current.emit('message', { roomID, username, message, type: 0 });
+    e.target.reset();
+  }
+
+  const onSaveUsername = e => {
+    e.preventDefault();
+    const userName = e.target.elements[0].value + '-' + Date.now();
+    username = userName;
+    localStorage.setItem('username', userName);
+    e.target.reset();
+  }
+
+  return (<main style={{ width: showAside ? 'calc(100vw - 320px)' : '100vw' }}>
     <div
       className={'w-100 h-100 justify-center align-center media-grid-' + (peersRef.current.length + 1)}
+
     >
-      <LocalVideo media={media} />
+      <LocalVideo stream={localStream.current} />
       {peersRef.current.length > 0 && peersRef.current.map((user, index) => <RemoteVideo key={index} user={user} />)}
     </div>
 
     <div className='w-100 media-controls'>
 
-      <div className="d-flex align-center">
-        <small title="Number of users" disabled><i className="fa fa-link mr-1"></i>{window.location.href}</small>
-      </div>
+      <div className="d-flex align-center"></div>
 
       <div>
         <button onClick={() => { onMedia('audio'); }} title="Toggle Audio">
@@ -259,25 +304,53 @@ export default function VideoRoom(props) {
         </button>
 
         <button onClick={() => { onMedia('share-screen'); }} title="Toggle Share Screen">
-          <i className={media.isSharingScreen ? 'bi bi-tv-fill' : 'fa fa-desktop'}></i>
+          <i className={media.sharingScreen ? 'bi bi-tv-fill' : 'fa fa-desktop'}></i>
         </button>
 
         <button onClick={onHangout} title="Hangout">
           <i className='fa fa-phone-slash'></i>
         </button>
-      </div>
 
-      <div>
-        <button title="Open chat box" disabled>
+        <button title="Open chat box" onClick={() => { setShowAside(!showAside) }}>
           <i className="fa fa-comments mr-1"></i>{peersRef.current.length + 1}
         </button>
       </div>
+
+      <div></div>
     </div>
 
-    {/* <div className="chat-box">
-        <ul>
-          {peersRef.current && peersRef.current.map((peer, index) => <li key={index}>{peer.peerID}</li>)}
-        </ul>
-      </div> */}
+    {showAside && <div className="h-100 chat-box" style={{ width: showAside ? '320px' : '0' }}>
+      <header>
+        <span onClick={() => { setShowSettings(false) }}><i className="fa fa-comments mr-1"></i>Chat box ({peersRef.current.length + 1})</span>
+        <span onClick={() => { setShowSettings(true) }}><i className="fa fa-cogs mr-1"></i>Settings</span>
+      </header>
+
+      {showSettings
+        ? <>
+          <ul>
+            <li>
+              <form className="d-flex" onSubmit={onSaveUsername}>
+                <input className="w-100" type="text" name="username" placeholder="username.." required />
+                <button className="btn h-100" type="submit">save</button>
+              </form>
+            </li>
+          </ul>
+
+          <form>
+            <label>Share url with friends</label>
+            <input className="w-100" type="url" defaultValue={window.location.href} readOnly />
+          </form>
+        </>
+
+        : <>
+          <ul ref={messagesRef}></ul>
+
+          <form className="w-100 d-flex justify-between align-center" onSubmit={onSendMessage}>
+            <input className="w-100 h-100" type="text" name="message" placeholder="message.." required />
+            <button className="btn" type="submit"><i className="fa fa-paper-plane"></i></button>
+          </form>
+        </>}
+    </div>}
+
   </main>);
 };

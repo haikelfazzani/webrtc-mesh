@@ -3,6 +3,7 @@ const iceServersConfig = {
     ? [
       { urls: 'stun:stun.l.google.com:19302' },
       { urls: 'stun:global.stun.twilio.com:3478?transport=udp' },
+      { urls:'stun:turn01.brie.fi:5349' },
       {
         urls: 'turn:numb.viagenie.ca',
         username: 'bestprod2bp@gmail.com',
@@ -17,6 +18,11 @@ const iceServersConfig = {
         urls: "turn:openrelay.metered.ca:443",
         username: "openrelayproject",
         credential: "openrelayproject"
+      }, 
+      { // https://github.com/holtwick/briefing/blob/master/app/.env
+        urls: "turn:turn01.brie.fi:5349",
+        username: "brie",
+        credential: "fi"
       }
     ]
     : [{ urls: 'stun:stun.l.google.com:19302' }]

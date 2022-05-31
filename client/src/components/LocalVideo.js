@@ -1,25 +1,24 @@
 import { memo, useEffect, useRef } from "react";
 import poster from '../utils/poster';
 
-function LocalVideo({ media }) {
+function LocalVideo({ stream }) {
   const videoRef = useRef();
 
   useEffect(() => {
-    if (videoRef && videoRef.current) videoRef.current.srcObject = media.stream;
+    if (videoRef && videoRef.current) videoRef.current.srcObject = stream;
 
     return () => {
       if (videoRef && videoRef.current) videoRef.current.srcObject = null;
     }
-  }, [media]);
+  }, [stream]);
 
-  if (media.video || media.isSharingScreen) {
+  if (stream) {
     return <video
       ref={videoRef}
       className="w-100 h-100 br7"
       poster={poster('You')}
       playsInline
-      autoPlay
-      controls={media.isSharingScreen}>
+      autoPlay>
     </video>
   }
   else {
