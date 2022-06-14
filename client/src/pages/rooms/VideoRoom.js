@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
+import AppConfig from "../../AppConfig";
 import LocalVideo from "../../components/LocalVideo";
 
 import RemoteVideo from "../../components/RemoteVideo";
@@ -31,10 +32,6 @@ const screenShareMediaConstraints = {
   cursor: true
 };
 
-const proxy_server = process.env.NODE_ENV === 'production'
-  ? window.location.origin
-  : 'http://localhost:5000';
-
 const username = localStorage.getItem('username') || makeid(5);
 
 export default function VideoRoom(props) {
@@ -53,7 +50,7 @@ export default function VideoRoom(props) {
   const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
-    socketRef.current = io.connect(proxy_server, { forceNew: true });
+    socketRef.current = io.connect(AppConfig.BACKEND_URL, { forceNew: true });
     navigator.mediaDevices.getUserMedia(mediaConstraints).then(stream => {
 
       stream.getVideoTracks()[0].enabled = media.video;
@@ -282,10 +279,7 @@ export default function VideoRoom(props) {
   }
 
   return (<main style={{ width: showAside ? 'calc(100vw - 320px)' : '100vw' }}>
-    <div
-      className={'w-100 h-100 justify-center align-center media-grid-' + (peersRef.current.length + 1)}
-
-    >
+    <div className={'w-100 h-100 justify-center align-center media-grid-' + (peersRef.current.length + 1)}>
       <LocalVideo stream={localStream.current} />
       {peersRef.current.length > 0 && peersRef.current.map((user, index) => <RemoteVideo key={index} user={user} />)}
     </div>

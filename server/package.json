@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "start": "nodemon server.js"
+    "dev": "NODE_ENV=developpement nodemon server.js",
+    "start": "NODE_ENV=production nodemon server.js"
   },
   "dependencies": {
     "compression": "^1.7.4",

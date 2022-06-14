@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
+import AppConfig from "../../AppConfig";
 import LocalAudio from "../../components/LocalAudio";
 import iceServersConfig from "../../utils/iceServersConfig";
 import makeid from "../../utils/makeid";
@@ -7,18 +8,7 @@ import setMediaBitrate from "../../utils/setMediaBitrate";
 
 let io = window.io;
 let Peer = window.SimplePeer;
-
-const mediaConstraints = {
-  video: false,
-  audio: {
-    sampleSize: 16,
-    channelCount: 2
-  }
-};
-
-const proxy_server = process.env.NODE_ENV === 'production'
-  ? window.location.origin
-  : 'http://localhost:5000';
+const mediaConstraints = { video: false, audio: true };
 
 export default function AudioRoom(props) {
   const queryParams = useParams();
@@ -34,7 +24,7 @@ export default function AudioRoom(props) {
   const peersRef = useRef([]);
 
   useEffect(() => {
-    socketRef.current = io.connect(proxy_server);
+    socketRef.current = io.connect(AppConfig.BACKEND_URL);
     navigator.mediaDevices.getUserMedia(mediaConstraints).then(stream => {
 
       stream.getAudioTracks()[0].enabled = media.audio;
