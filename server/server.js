@@ -1,5 +1,4 @@
 const express = require("express");
-const path = require('path');
 const http = require("http");
 
 const app = express();
@@ -7,14 +6,17 @@ const server = http.createServer(app);
 
 const compression = require('compression');
 const morgan = require('morgan');
-const cors = require('cors');
+const cors = require('./middlewares/cors');
+const envn = require('envn');
 
 app.disable('x-powered-by');
 app.use(compression());
 
+envn({ path: '.env', encoding: 'utf8', override: false, async: false, debug: false });
+
 const isProduction = app.get('env') === 'production' || process.env.NODE_ENV === 'production';
 isProduction ? '' : app.use(morgan('short'));
-app.use(cors(isProduction ? 'https://la-reunion.ml' : 'http://localhost:3000'));
+app.use(cors);
 
 app.get('/', (req, res) => {
   res.status(200).send('hello world');
@@ -23,8 +25,8 @@ app.get('/', (req, res) => {
 const io = require('socket.io')(server, {
   cors: {
     origin: isProduction
-      ? ['https://la-reunion.ml', 'https://wwww.la-reunion.ml', 'https://webrtccc.netlify.app']
-      : ['http://localhost:3000', 'http://localhost:5000'],
+      ? JSON.parse(process.env.ALLOWED_PRODUCTION_DOMAIN)
+      : JSON.parse(process.env.ALLOWED_DEV_DOMAIN),
     autoConnect: true,
     transports: ['websocket', 'polling'],
     credentials: false
