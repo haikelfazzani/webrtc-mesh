@@ -14,7 +14,7 @@ app.use(compression());
 
 const isProduction = app.get('env') === 'production' || process.env.NODE_ENV === 'production';
 isProduction ? '' : app.use(morgan('short'));
-app.use(cors(isProduction ? 'http://la-reunion.ml' : 'http://localhost:3000'));
+app.use(cors(isProduction ? 'https://la-reunion.ml' : 'http://localhost:3000'));
 
 app.get('/', (req, res) => {
   res.status(200).send('hello world');
@@ -23,7 +23,7 @@ app.get('/', (req, res) => {
 const io = require('socket.io')(server, {
   cors: {
     origin: isProduction
-      ? ['http://la-reunion.ml', 'http://wwww.la-reunion.ml', 'https://webrtccc.netlify.app']
+      ? ['https://la-reunion.ml', 'https://wwww.la-reunion.ml', 'https://webrtccc.netlify.app']
       : ['http://localhost:3000', 'http://localhost:5000'],
     autoConnect: true,
     transports: ['websocket', 'polling'],
