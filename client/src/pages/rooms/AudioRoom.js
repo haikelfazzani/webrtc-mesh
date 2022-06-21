@@ -17,8 +17,8 @@ const mediaConstraints = {
 };
 
 const proxy_server = process.env.NODE_ENV === 'production'
-  ? 'https://maxiserv.azurewebsites.net'
-  : 'http://localhost:8000';
+  ? window.location.origin
+  : 'http://localhost:5000';
 
 export default function AudioRoom(props) {
   const queryParams = useParams();

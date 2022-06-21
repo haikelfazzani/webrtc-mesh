@@ -32,8 +32,8 @@ const screenShareMediaConstraints = {
 };
 
 const proxy_server = process.env.NODE_ENV === 'production'
-  ? 'https://maxiserv.azurewebsites.net'
-  : 'http://localhost:8000';
+  ? window.location.origin
+  : 'http://localhost:5000';
 
 const username = localStorage.getItem('username') || makeid(5);
 

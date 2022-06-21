@@ -1,6 +1,6 @@
 const users = {};
 
-module.exports = function socketHandler(socket, io) {
+module.exports = function signal(socket, io) {
   socket.on("join room", async ({ roomID, username }) => {
 
     socket.data.id = socket.id;
