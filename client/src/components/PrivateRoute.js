@@ -1,18 +1,13 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import { Redirect, Route } from 'react-router-dom';
-import AuthService from '../services/AuthService';
+import { useAuth0 } from '@auth0/auth0-react';
 
 export default function PrivateRoute({ children, ...rest }) {
 
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const { isLoading, isAuthenticated, error, user } = useAuth0();
+  // const [isAuthenticated, setIsAuthenticated] = useState(false)
 
-  useEffect(() => {
-    setIsAuthenticated(AuthService.isAuthenticated());
-
-    return () => {
-
-    }
-  }, [])
+  console.log(isAuthenticated, user);
 
   return (
     <Route
