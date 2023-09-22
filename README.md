@@ -17,6 +17,8 @@ npm start
 - ReactJS
 - Expressjs (NodeJs)
 - Socket.io (websocket)
+- Render Cloud
+- Netlify cloud
 
 # License
 MIT

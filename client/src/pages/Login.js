@@ -1,21 +1,20 @@
-import React from 'react'
+import React, { useState } from 'react'
 import Nav from '../components/Nav'
 import Footer from '../components/Footer'
 import { useHistory } from 'react-router-dom';
+import AuthService from '../services/AuthService';
 
 export default function Login() {
 
   const history = useHistory();
-
+const [message, setMessage] = useState(null)
 
   const onConnect = (e) => {
     e.preventDefault();
     const email = e.target.elements[0].value;
-    const password = e.target.elements[1].value;
-
-    console.log(email, password);
-    localStorage.setItem('isAuthenticated', true);
-    history.push('/profile');
+    const password = e.target.elements[1].value;    
+    if (AuthService.login(email, password)) history.push('/profile');
+    else setMessage('User is not found')
   }
 
   return (
@@ -39,6 +38,8 @@ export default function Login() {
 
           <button className='w-100 btn'>Sign in</button>
         </form>
+
+        {message && <p className='red'><i className='fa fa-info-circle mr-1'></i>{message}</p>}
       </main>
 
       <Footer />

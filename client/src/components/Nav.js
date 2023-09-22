@@ -1,5 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import AuthService from '../services/AuthService'
 
 export default function Nav() {
   return <nav className='w-100 container d-flex justify-between align-center'>
@@ -13,7 +14,10 @@ export default function Nav() {
       <li>{new Date().toLocaleString()}</li>
       <li><i className='fa fa-info-circle'></i></li>
       <li><i className='fa fa-cog'></i></li>
-      <li><Link className='btn black' to="/login"><i className='fa fa-sign-in-alt mr-1'></i>Login</Link></li>
+      {AuthService.isAuthenticated()
+        ? <li><button className='btn bg-red' onClick={() => { AuthService.logout() }}><i className='fa fa-sign-out-alt mr-1'></i>Logout</button></li>
+        : <li><Link className='btn black' to="/login"><i className='fa fa-sign-in-alt mr-1'></i>Login</Link></li>
+      }
     </ul>
   </nav>
 }
