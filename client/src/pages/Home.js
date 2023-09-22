@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import Nav from '../components/Nav';
+import Footer from '../components/Footer';
 
 export default function Home(props) {
 
@@ -17,7 +18,7 @@ export default function Home(props) {
 
     const app = document.getElementById('app');
 
-    if (!app) return;
+    if (!app || !window.Typewriter) return;
 
     const typewriter = new window.Typewriter(app, { loop: true, delay: 75, });
 
@@ -53,6 +54,6 @@ export default function Home(props) {
 
     </section>
 
-    <footer className='w-100 container text-center uppercase'>Created with <i className='fa fa-heart'></i> by Haikel Fazzani</footer>
+    <Footer />
   </>)
 }

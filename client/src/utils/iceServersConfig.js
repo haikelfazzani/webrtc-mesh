@@ -2,6 +2,8 @@ const iceServersConfig = {
   iceServers: process.env.NODE_ENV === 'production'
     ? [
       { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun.nextcloud.com:443' },
+      { urls: 'relay.webwormhole.io' },
       { urls: 'stun:global.stun.twilio.com:3478?transport=udp' },
       { urls:'stun:turn01.brie.fi:5349' },
       {

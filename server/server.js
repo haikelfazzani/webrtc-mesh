@@ -7,12 +7,11 @@ const server = http.createServer(app);
 const compression = require('compression');
 const morgan = require('morgan');
 const cors = require('./middlewares/cors');
-const envn = require('envn');
 
 app.disable('x-powered-by');
 app.use(compression());
 
-envn({ path: '.env', encoding: 'utf8', override: false, async: false, debug: false });
+require('dotenv').config();
 
 const isProduction = app.get('env') === 'production' || process.env.NODE_ENV === 'production';
 isProduction ? '' : app.use(morgan('short'));

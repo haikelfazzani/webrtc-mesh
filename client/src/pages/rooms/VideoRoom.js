@@ -12,27 +12,29 @@ let io = window.io;
 let Peer = window.SimplePeer;
 
 const mediaConstraints = {
-  video: {
-    width: { max: 320 },
-    height: { max: 240 },
-    // aspectRatio: 1,
-    frameRate: { ideal: 10, max: 15 }
-  },
+  // video: {
+  //   width: { max: 320 },
+  //   height: { max: 240 },
+  //   // aspectRatio: 1,
+  //   frameRate: { ideal: 10, max: 15 }
+  // },
+  video: true,
   audio: true
 };
 
 const screenShareMediaConstraints = {
-  video: {
-    width: { max: 1280 },
-    height: { max: 720 },
-    aspectRatio: 1,
-    frameRate: { ideal: 10, max: 15 }
-  },
+  // video: {
+  //   width: { max: 1280 },
+  //   height: { max: 720 },
+  //   aspectRatio: 1,
+  //   frameRate: { ideal: 10, max: 15 }
+  // },
+  video: true,
   audio: true,
   cursor: true
 };
 
-const username = localStorage.getItem('username') || makeid(5);
+let username = localStorage.getItem('username') || makeid(5);
 
 export default function VideoRoom(props) {
   const queryParams = useParams();
@@ -148,7 +150,7 @@ export default function VideoRoom(props) {
         allowHalfTrickle: true,
         streams: [stream],
         config: iceServersConfig,
-        sdpTransform: (sdp) => setMediaBitrate(sdp)
+        // sdpTransform: (sdp) => setMediaBitrate(sdp)
       });
 
       peer.on("signal", signal => {
@@ -177,7 +179,7 @@ export default function VideoRoom(props) {
         allowHalfTrickle: true,
         streams: [stream],
         config: iceServersConfig,
-        sdpTransform: (sdp) => setMediaBitrate(sdp)
+        // sdpTransform: (sdp) => setMediaBitrate(sdp)
       });
 
       peer.on("signal", signal => {
