@@ -3,18 +3,26 @@ import Nav from '../components/Nav'
 import Footer from '../components/Footer'
 import { useHistory } from 'react-router-dom';
 import AuthService from '../services/AuthService';
+import Spinner from '../components/Spinner';
 
 export default function Login() {
 
   const history = useHistory();
-const [message, setMessage] = useState(null)
+  const [message, setMessage] = useState(null);
+  const [isLoginProcess, setIsLoginProcess] = useState(false)
 
   const onConnect = (e) => {
     e.preventDefault();
+    setIsLoginProcess(true);
     const email = e.target.elements[0].value;
-    const password = e.target.elements[1].value;    
-    if (AuthService.login(email, password)) history.push('/profile');
-    else setMessage('User is not found')
+    const password = e.target.elements[1].value;
+
+    setTimeout(() => {
+      if (AuthService.login(email, password)) history.push('/profile');
+      else setMessage('User is not found');
+
+      setIsLoginProcess(false);
+    }, 3000);
   }
 
   return (
@@ -42,6 +50,7 @@ const [message, setMessage] = useState(null)
         {message && <p className='red'><i className='fa fa-info-circle mr-1'></i>{message}</p>}
       </main>
 
+      {isLoginProcess && <Spinner />}
       <Footer />
     </div>
   )

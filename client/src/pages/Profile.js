@@ -1,11 +1,15 @@
-import React from 'react'
+import React, { useState } from 'react'
 import Nav from '../components/Nav'
 import Footer from '../components/Footer'
+import AuthService from '../services/AuthService'
 
 export default function Profile() {
+  const [user, setUser] = useState(AuthService.isAuthenticated());
 
   const onEdit = (e) => {
     e.preventDefault();
+
+    e.target.reset();
   }
 
   return (
@@ -22,12 +26,12 @@ export default function Profile() {
         <form className='w-100 shadow p-3 br7' onSubmit={onEdit}>
           <div className='d-flex flex-column mb-2'>
             <label htmlFor='username'>Username</label>
-            <input className='mt-1' type='text' name='username' id='username' placeholder='joedoe' required />
+            <input className='mt-1' type='text' name='username' id='username' defaultValue={user.username} placeholder='joedoe' required />
           </div>
 
           <div className='d-flex flex-column mb-2'>
             <label htmlFor='email'>Email</label>
-            <input className='mt-1' type='email' name='email' id='email' placeholder='example@gmail.com' required />
+            <input className='mt-1' type='email' name='email' id='email' defaultValue={user.email} placeholder='example@gmail.com' required />
           </div>
 
           <div className='d-flex flex-column mb-2'>
